@@ -84,7 +84,7 @@ export function AddHabitDialog() {
 
     await db.habits.add({
       id: habitUuid,
-      userId: 'test-user-id',
+      userId: '00000000-0000-0000-0000-000000000000',
       name: habitName,
       description: data.description || null,
       type: data.type,

@@ -8,7 +8,7 @@ import { HabitRow } from "./habit-row";
 import { Card } from "../components/shadcn/card"; // ⚡ Importing shadcn Card
 
 export const HabitList = () => {
-  const MOCK_USER = 'test-user-id';
+  const MOCK_USER = '00000000-0000-0000-0000-000000000000';
 
   // 1. Reactive Dexie queries (cleanly handling our integer tombstones)
   const habits = useLiveQuery(() => 
