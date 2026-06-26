@@ -1,24 +1,54 @@
+
 import Dexie, { type Table } from 'dexie';
 import { Habit } from './habit';
 import { HabitLog } from './habit-log';
 import { SyncMeta } from './sync-meta';
+import { triggerDebouncedSync } from '../lib/sync-trigger';
 
-export type SyncDatabaseTables = Exclude<keyof HabitDatabase, keyof import('dexie').Dexie | 'syncMeta'>;
+export type SyncDatabaseTables = Exclude<keyof AppDatabase, keyof import('dexie').Dexie | 'syncMeta'>;
 
-// 💡 2. Subclass Dexie and pass the primary key type (string) explicitly
-export class HabitDatabase extends Dexie {
+export class AppDatabase extends Dexie {
   syncMeta!: Table<SyncMeta, string>
   habits!: Table<Habit, string>;
   habitLogs!: Table<HabitLog, string>;
 
+  // 2. Lock flag to prevent feedback loops
+  public isSyncing = false;
+
   constructor() {
-    super('HabitDatabase');
+    super('AppDatabase');
     this.version(2).stores({
       syncMeta: 'key',
       habits: 'id, userId, type, updatedAt',
       habitLogs: 'id, habitId, userId, logDate, updatedAt'
     });
+
+    this.use({
+      stack: "dbcore",
+      name: "debounce-mutation-listener",
+      create: (downlevel) => {
+        return {
+          ...downlevel,
+          table: (tableName: string) => {
+            const table = downlevel.table(tableName);
+            if (tableName === 'syncMeta') return table;
+
+            return {
+              ...table,
+              mutate: async (req) => {
+                if (!this.isSyncing) {
+                  triggerDebouncedSync();
+                }
+                const result = await table.mutate(req);
+
+                return result;
+              }
+            }
+          }
+        }
+      }
+    });
   }
 }
 
-export const db = new HabitDatabase();
+export const db = new AppDatabase();

@@ -6,6 +6,7 @@ export type SyncDatabaseTables = "habits" | "habitLogs";
 export async function runSyncEngine() {
 	try {
 		console.log("🔄 [SYNC ENGINE] Synchronization cycle initiated...");
+		db.isSyncing = true;
 
 		// ========================================================
 		// === STEP 1: Gather Local Changes (Push Preparation) ====
@@ -95,7 +96,7 @@ export async function runSyncEngine() {
 
 					// bulkPut handles upsert operations automatically matching on primary key 'id'
 					await db.table(tableKey).bulkPut(hydratedRecords);
-					console.log(`📥 [SYNC ENGINE] Hydrated ${hydratedRecords.length} rows into local store: "${tableKey}"`);
+					console.debug(`📥 [SYNC ENGINE] Hydrated ${hydratedRecords.length} rows into local store: "${tableKey}"`);
 				}
 			});
 		}
@@ -113,5 +114,7 @@ export async function runSyncEngine() {
 	} catch (error) {
 		console.error("❌ [SYNC ENGINE] The local sync engine encountered an execution fault:", error);
 		throw error;
+	} finally {
+		db.isSyncing = false;
 	}
 }
