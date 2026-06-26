@@ -77,11 +77,21 @@ export async function runSyncEngine() {
 					const remoteRecords = serverDirtyRecords[tableKey];
 					if (!remoteRecords || remoteRecords.length === 0) continue;
 
-					const hydratedRecords = remoteRecords.map((record) => ({
-						...record,
-						createdAt: record.createdAt ? new Date(record.createdAt) : undefined,
-						updatedAt: record.updatedAt ? new Date(record.updatedAt) : undefined,
-					}));
+					const hydratedRecords = remoteRecords.map((record) => {
+						const baseHydration = {
+							...record,
+							createdAt: record.createdAt ? new Date(record.createdAt) : undefined,
+							updatedAt: record.updatedAt ? new Date(record.updatedAt) : undefined,
+						};
+
+						// 2. 🛡️ Table-Specific Context Interceptor
+						// This keeps the engine abstract while fixing the string format edge case
+						if (tableKey === "habitLogs" && typeof baseHydration.logDate === "string") {
+							baseHydration.logDate = baseHydration.logDate.split("T")[0];
+						}
+
+						return baseHydration;
+					});
 
 					// bulkPut handles upsert operations automatically matching on primary key 'id'
 					await db.table(tableKey).bulkPut(hydratedRecords);

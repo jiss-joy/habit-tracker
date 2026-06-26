@@ -80,8 +80,12 @@ export function HabitRow({
       {/* Right Column Matrix Target Columns */}
       <div className="w-2/3 grid grid-cols-10 gap-2">
         {timeline.map((day) => {
-          const matchedLog = logs.find(
-            l => l.habitId === habit.id && l.logDate === day.dateStr && l.value > 0
+          const matchedLog = logs.find(l => {
+            if(!l.logDate) return false;
+
+            const normalizedLogDate = l.logDate.includes('T') ? new Date(l.logDate).toISOString().split('T')[0] : l.logDate;
+
+            return l.habitId === habit.id && normalizedLogDate === day.dateStr && l.value > 0}
           );
           return (
             <HabitCell
