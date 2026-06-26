@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { db } from '../dexie/db';
 import { HabitFrequencies } from '../db/enums/habit-frequency';
 import { HabitType } from '../db/enums/habit-type';
+import {v5 as uuid} from 'uuid';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/shadcn/dialog";
 import { Button } from "../components/shadcn/button";
@@ -18,6 +19,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "../components/shadcn/field"
+import { useUuid } from '../hooks/use-uuid';
 
 // 💡 Define strict validation schema matching your layout requirements
 const habitFormSchema = z.discriminatedUnion('type', [
@@ -50,6 +52,7 @@ type HabitFormValues = z.infer<typeof habitFormSchema>;
 
 export function AddHabitDialog() {
   const [open, setOpen] = useState(false);
+  const getUuid = useUuid()
 
   // 💡 Initialize react-hook-form with Zod validation resolver
   const {
@@ -74,8 +77,12 @@ export function AddHabitDialog() {
   const selectedType = watch('type');
 
   async function onSubmit(data: HabitFormValues) {
+    const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const habitSlug = `USER_ID_${dateStr}`;
+    const habitUuid = getUuid(habitSlug);
+
     await db.habits.add({
-      id: crypto.randomUUID(),
+      id: habitUuid,
       userId: 'test-user-id',
       name: data.name,
       description: data.description || null,
@@ -83,6 +90,7 @@ export function AddHabitDialog() {
       frequency: data.frequency,
       targetValue: data.type === HabitType.MEASURABLE ? Number(data.targetValue) : null,
       unit: data.type === HabitType.MEASURABLE ? (data.unit ?? null) : null,
+      isDeleted: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

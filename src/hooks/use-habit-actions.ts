@@ -1,11 +1,8 @@
 import { db } from "../dexie/db";
-import { v5 as uuid } from 'uuid';
-
-// 1. Define a permanent, static namespace UUID for your app's logs
-// (Generated once, never change this or your hashes will shift!)
-const LOG_NAMESPACE = "c3683354-a95a-4aeb-9d1f-230b9852aa55";
+import { useUuid } from "./use-uuid";
 
 export function useHabitActions(userId: string = 'test-user-id') {
+  const getUuid = useUuid();
   async function deleteHabit(habitId: string) {
     if (!confirm("Are you sure you want to delete this habit and all its logged history?")) return false;
 
@@ -17,22 +14,18 @@ export function useHabitActions(userId: string = 'test-user-id') {
   }
 
   async function toggleBinaryLog(habitId: string, dateStr: string) {
-    // ⚡ 1. Generate the deterministic compound string ID
-    // const logId = `${userId}_${habitId}_${dateStr}`;
-    const slotString = `${userId}_${habitId}_${dateStr}`;
-
-    // ⚡ 2. Generate a flawless, deterministic UUID natively
-    const logId = uuid(slotString, LOG_NAMESPACE);
-    const existingLog = await db.habitLogs.get(logId);
+    const logSlug = `${userId}_${habitId}_${dateStr}`;
+    const logUuid = getUuid(logSlug);
+    const existingLog = await db.habitLogs.get(logUuid);
 
     if (existingLog) {
-      await db.habitLogs.update(logId, {
+      await db.habitLogs.update(logUuid, {
         value: existingLog.value === 1 ? 0 : 1,
         updatedAt: new Date(),
       });
     } else {
       await db.habitLogs.add({
-        id: logId,
+        id: logUuid,
         habitId,
         userId: userId,
         logDate: dateStr,
@@ -44,11 +37,11 @@ export function useHabitActions(userId: string = 'test-user-id') {
   }
 
   async function saveMeasurableLog(habitId: string, dateStr: string, value: number, existingLogId?: string) {
-    // ⚡ 1. Generate the same slot target identity
-    const logId = `${userId}_${habitId}_${dateStr}`;
+    const logSlug = `${userId}_${habitId}_${dateStr}`;
+    const logUuid = getUuid(logSlug);
 
     await db.habitLogs.put({
-      id: logId,
+      id: logUuid,
       habitId,
       userId: userId,
       logDate: dateStr,
