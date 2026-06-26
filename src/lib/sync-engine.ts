@@ -1,0 +1,101 @@
+import { db } from "../dexie/db"; // Adjust this path to match your Dexie instance location
+
+// Define the table keys that participate in the sync cycle
+export type SyncDatabaseTables = "habits" | "habitLogs";
+
+export async function runSyncEngine() {
+	try {
+		console.log("🔄 [SYNC ENGINE] Synchronization cycle initiated...");
+
+		// ========================================================
+		// === STEP 1: Gather Local Changes (Push Preparation) ====
+		// ========================================================
+
+		// Fetch the last successful sync checkpoint milestone
+		const syncMetaRecord = await db.syncMeta.get("lastSyncedAt");
+		const lastSyncedAt = syncMetaRecord ? syncMetaRecord.value : null;
+		const lastSyncedAtDate = lastSyncedAt ? new Date(lastSyncedAt) : new Date(0);
+
+		const localDirtyRecords: Record<SyncDatabaseTables, any[]> = {
+			habits: [],
+			habitLogs: [],
+		};
+
+		// Scan all participating tables for records modified since the last checkpoint
+		const tableKeys: SyncDatabaseTables[] = ["habits", "habitLogs"];
+
+		for (const tableKey of tableKeys) {
+			const dirtyRows = await db
+				.table(tableKey)
+				.where("updatedAt")
+				.above(lastSyncedAtDate)
+				.toArray();
+
+			localDirtyRecords[tableKey] = dirtyRows;
+		}
+
+		// Check if we even need to execute network traffic
+		const hasLocalChanges = Object.values(localDirtyRecords).some(rows => rows.length > 0);
+		if (!hasLocalChanges && lastSyncedAt) {
+			console.log("😴 [SYNC ENGINE] No local modifications found. Proceeding to fetch cloud delta...");
+		}
+
+		// ========================================================
+		// === STEP 2 & 3: Network Pipe Transmission ==============
+		// ========================================================
+		const response = await fetch("/api/sync", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				lastSyncedAt,
+				localDirtyRecords,
+			}),
+		});
+
+		// Network safety guard
+		if (!response.ok) {
+			throw new Error(`[SYNC ENGINE] Cloud synchronization endpoint rejected request with status: ${response.status}`);
+		}
+
+		// Parsing Cloud Response (Consuming the body stream exactly ONCE)
+		const { serverTime, serverDirtyRecords } = await response.json() as {
+			serverTime: string;
+			serverDirtyRecords: Partial<Record<SyncDatabaseTables, any[]>>;
+		};
+
+		// ========================================================
+		// === STEP 4: Merging Server Changes into IndexedDB ======
+		// ========================================================
+		const remoteTableKeys = Object.keys(serverDirtyRecords) as SyncDatabaseTables[];
+
+		if (remoteTableKeys.length > 0) {
+			// Execute an atomic Read/Write transaction across all tables being modified
+			await db.transaction("rw", remoteTableKeys, async () => {
+				for (const tableKey of remoteTableKeys) {
+					const remoteRecords = serverDirtyRecords[tableKey];
+					if (!remoteRecords || remoteRecords.length === 0) continue;
+
+					// bulkPut handles upsert operations automatically matching on primary key 'id'
+					await db.table(tableKey).bulkPut(remoteRecords);
+					console.log(`📥 [SYNC ENGINE] Hydrated ${remoteRecords.length} rows into local store: "${tableKey}"`);
+				}
+			});
+		}
+
+		// ========================================================
+		// === STEP 5: Baseline Milestone Advancement =============
+		// ========================================================
+		await db.syncMeta.put({
+			key: "lastSyncedAt",
+			value: serverTime,
+		});
+
+		console.log(`✨ [SYNC ENGINE] Sync cycle completed successfully. Baseline advanced to: ${serverTime}`);
+
+	} catch (error) {
+		console.error("❌ [SYNC ENGINE] The local sync engine encountered an execution fault:", error);
+		throw error;
+	}
+}

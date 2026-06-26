@@ -1,4 +1,5 @@
 import antfu from '@antfu/eslint-config'
+import format from 'eslint-plugin-format'
 
 export default antfu(
   {
@@ -16,6 +17,20 @@ export default antfu(
     isInEditor: false,
 
     stylistic: false
+  },
+
+   // use prettier to format JavaScript/TypeScript with TailwindCSS classnames sorting
+  {
+    files: ['**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}'],
+    languageOptions: {
+      parser: format.parserPlain,
+    },
+    plugins: {
+      format,
+    },
+    rules: {
+      'format/prettier': ['error', { sortTailwindcss: {} }],
+    },
   },
 
   // --- Custom rule overrides ---

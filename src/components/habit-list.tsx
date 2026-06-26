@@ -9,7 +9,7 @@ import { HabitRow } from "./habit-row";
 export const HabitList = () => {
   const MOCK_USER = 'test-user-id';
 
-  const habits = useLiveQuery(() => db.habits.toArray());
+  const habits = useLiveQuery(() => db.habits.toArray().then(habits => habits.filter(habit => habit.isDeleted !== 1)));
   const logs = useLiveQuery(() => db.habitLogs.where('userId').equals(MOCK_USER).toArray());
 
   const timeline = generatePastNDays(10);

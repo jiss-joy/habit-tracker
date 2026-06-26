@@ -1,5 +1,6 @@
 import { AddHabitDialog } from "../components/add-habit-button";
 import { HabitList } from "../components/habit-list";
+import { SyncStatusBar } from "../components/sync-button";
 
 export default function HabitDashboard() {
   return (
@@ -18,6 +19,7 @@ export default function HabitDashboard() {
 
         {/* Dynamic Data Region */}
         <HabitList />
+        <SyncStatusBar/>
 
       </main>
     </div>
