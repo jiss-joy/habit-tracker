@@ -10,13 +10,13 @@ export function useUuid() {
   useMemo(() => {
     if (!NAMESPACE) {
       throw new Error(
-        "❌ [CONFIG FAULT] 'NEXT_PUBLIC_UUID_NAMESPACE' is missing from your environment variables."
+        "❌ [MISSING CONFIG] 'NEXT_PUBLIC_UUID_NAMESPACE' is missing from your environment variables."
       );
     }
 
     if (!validateUuid(NAMESPACE)) {
       throw new Error(
-        `❌ [CONFIG FAULT] 'NEXT_PUBLIC_UUID_NAMESPACE' value ("${NAMESPACE}") is not a valid UUID.`
+        `❌ [MISSING CONFIG] 'NEXT_PUBLIC_UUID_NAMESPACE' value ("${NAMESPACE}") is not a valid UUID.`
       );
     }
   }, []);

@@ -77,14 +77,15 @@ export function AddHabitDialog() {
   const selectedType = watch('type');
 
   async function onSubmit(data: HabitFormValues) {
-    const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const habitSlug = `USER_ID_${dateStr}`;
+    const timestamp = new Date().getTime();
+    const habitName = data.name.trim();
+    const habitSlug = `USER_ID_${habitName}_${timestamp}`;
     const habitUuid = getUuid(habitSlug);
 
     await db.habits.add({
       id: habitUuid,
       userId: 'test-user-id',
-      name: data.name,
+      name: habitName,
       description: data.description || null,
       type: data.type,
       frequency: data.frequency,
