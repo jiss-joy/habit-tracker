@@ -77,9 +77,15 @@ export async function runSyncEngine() {
 					const remoteRecords = serverDirtyRecords[tableKey];
 					if (!remoteRecords || remoteRecords.length === 0) continue;
 
+					const hydratedRecords = remoteRecords.map((record) => ({
+						...record,
+						createdAt: record.createdAt ? new Date(record.createdAt) : undefined,
+						updatedAt: record.updatedAt ? new Date(record.updatedAt) : undefined,
+					}));
+
 					// bulkPut handles upsert operations automatically matching on primary key 'id'
-					await db.table(tableKey).bulkPut(remoteRecords);
-					console.log(`📥 [SYNC ENGINE] Hydrated ${remoteRecords.length} rows into local store: "${tableKey}"`);
+					await db.table(tableKey).bulkPut(hydratedRecords);
+					console.log(`📥 [SYNC ENGINE] Hydrated ${hydratedRecords.length} rows into local store: "${tableKey}"`);
 				}
 			});
 		}

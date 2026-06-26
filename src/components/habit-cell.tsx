@@ -88,7 +88,7 @@ export function HabitCell({
   return (
     <Button 
       variant='ghost' 
-      onClick={() => onBinaryToggle(habitId, dateStr, matchedLog?.id)} 
+      onClick={() => onBinaryToggle(habitId, dateStr)} 
       className={`aspect-square h-auto w-full p-0 flex flex-col items-center justify-center rounded-md text-xs font-semibold border transition-all active:scale-95 shadow-none ${customClasses}`}
     >
       {matchedLog ? <Check className="h-4 w-4 stroke-[3]" /> : <Minus className="h-3 w-3 opacity-40" />}

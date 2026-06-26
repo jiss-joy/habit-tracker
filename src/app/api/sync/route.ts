@@ -13,7 +13,7 @@ type NetworkSyncRecord = {
 
 export async function POST(request: Request) {
   try {
-    const serverTime = new Date().toISOString();
+    const serverSyncTime = new Date().toISOString();
     const body = await request.json();
 
     const { lastSyncedAt, localDirtyRecords } = body as {
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         const formattedRecord = {
           ...clientRecord,
           createdAt: new Date(clientRecord.createdAt),
-          updatedAt: new Date(clientRecord.updatedAt),
+          updatedAt: new Date(serverSyncTime),
           // Ensure isDeleted defaults safely to 0 if the client record dropped it
           isDeleted: clientRecord.isDeleted ?? 0,
         };
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      serverTime,
+      serverTime: serverSyncTime,
       serverDirtyRecords,
     });
 

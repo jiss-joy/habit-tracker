@@ -1,11 +1,12 @@
 'use client';
 
-import { Habit } from "../dexie/db";
+import { Habit } from "../dexie/habit";
 import { HabitType } from "../db/enums/habit-type";
 import { Button } from "./shadcn/button";
 import { HabitCell } from "./habit-cell";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./shadcn/dropdown-menu";
 import { MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface HabitRowProps {
   habit: Habit;
@@ -28,9 +29,28 @@ export function HabitRow({
 }: HabitRowProps) {
   const isMeasurable = habit.type === HabitType.MEASURABLE;
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Tracks the timestamp token so we only flash when the server pushes a real change
+  const prevUpdatedAtRef = useRef(habit.updatedAt?.toString());
+
+  useEffect(() => {
+    const currentSyncToken = habit.updatedAt?.toString();
+
+    if (prevUpdatedAtRef.current && prevUpdatedAtRef.current !== currentSyncToken) {
+      setIsSyncing(true);
+    }
+    prevUpdatedAtRef.current = currentSyncToken;
+  }, [habit.updatedAt]);
+
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group">
-      
+    <div
+      onAnimationEnd={() => setIsSyncing(false)}
+      className={`flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800/50 
+          hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group 
+          ${isSyncing ? "animate-sync-flash bg-amber-500/10 border-amber-500/40 dark:bg-amber-500/5 dark:border-amber-500/30" : ""}`
+      }>
+
       {/* Left Column Profile details */}
       <div className="w-1/3 pr-4 flex items-center justify-between gap-2">
         <div className="truncate">
@@ -60,8 +80,9 @@ export function HabitRow({
       {/* Right Column Matrix Target Columns */}
       <div className="w-2/3 grid grid-cols-10 gap-2">
         {timeline.map((day) => {
-          const matchedLog = logs.find(l => l.habitId === habit.id && l.logDate === day.dateStr);
-
+          const matchedLog = logs.find(
+            l => l.habitId === habit.id && l.logDate === day.dateStr && l.value > 0
+          );
           return (
             <HabitCell
               key={day.dateStr}
