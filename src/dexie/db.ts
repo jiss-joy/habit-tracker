@@ -3,7 +3,7 @@ import Dexie, { type Table } from 'dexie';
 import { Habit } from './habit';
 import { HabitLog } from './habit-log';
 import { SyncMeta } from './sync-meta';
-import { triggerDebouncedSync } from '../lib/sync-trigger';
+import { triggerSync } from '../lib/sync-trigger';
 
 export type SyncDatabaseTables = Exclude<keyof AppDatabase, keyof import('dexie').Dexie | 'syncMeta'>;
 
@@ -38,7 +38,7 @@ export class AppDatabase extends Dexie {
               mutate: async (req) => {
                 const result = await table.mutate(req);
                 if (!this.isSyncing) {
-                  triggerDebouncedSync(this);
+                  triggerSync(this, true);
                 }
 
                 return result;

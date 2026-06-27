@@ -5,7 +5,7 @@ import { runSyncEngine } from './sync-engine';
 const DEBOUNCE_DELAY = 3000;
 let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-export function triggerDebouncedSync(dexieDb: AppDatabase) {
+export function triggerSync(dexieDb: AppDatabase, debounced: boolean = false) {
   if (timeoutId) clearTimeout(timeoutId);
 
   timeoutId = setTimeout(async () => {
@@ -15,5 +15,5 @@ export function triggerDebouncedSync(dexieDb: AppDatabase) {
     } catch (error) {
       console.error("❌ Background sync failed:", error);
     }
-  }, DEBOUNCE_DELAY);
+  }, debounced ? DEBOUNCE_DELAY : 0);
 }
