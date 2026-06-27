@@ -36,10 +36,10 @@ export class AppDatabase extends Dexie {
             return {
               ...table,
               mutate: async (req) => {
-                if (!this.isSyncing) {
-                  triggerDebouncedSync();
-                }
                 const result = await table.mutate(req);
+                if (!this.isSyncing) {
+                  triggerDebouncedSync(this);
+                }
 
                 return result;
               }
@@ -51,4 +51,14 @@ export class AppDatabase extends Dexie {
   }
 }
 
-export const db = new AppDatabase();
+let db: AppDatabase | undefined;
+
+export function getDexieDb(): AppDatabase {
+  if (typeof window === 'undefined') {
+    throw new Error('Dexie is not available on the server side.');
+  }
+
+  if (!db) db = new AppDatabase();
+
+  return db;
+}

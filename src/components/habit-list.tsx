@@ -1,16 +1,17 @@
 'use client';
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../dexie/db";
+import { getDexieDb } from "../dexie/db";
 import { generatePastNDays } from "../lib/date-helpers";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { HabitRow } from "./habit-row";
 import { Card } from "../components/shadcn/card"; // ⚡ Importing shadcn Card
+import { useDexieDb } from "../app/contexts/dexie-provider";
 
 export const HabitList = () => {
   const MOCK_USER = '00000000-0000-0000-0000-000000000000';
+  const db = useDexieDb();
 
-  // 1. Reactive Dexie queries (cleanly handling our integer tombstones)
   const habits = useLiveQuery(() => 
     db.habits.toArray().then(rows => rows.filter(habit => habit.isDeleted !== 1))
   );

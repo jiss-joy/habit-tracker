@@ -1,8 +1,9 @@
-import { db } from "../dexie/db";
+import { useDexieDb } from "../app/contexts/dexie-provider";
 import { useUuid } from "./use-uuid";
 
 export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000000000') {
   const getUuid = useUuid();
+  const db = useDexieDb();
 
   async function deleteHabit(habitId: string) {
     if (!confirm("Are you sure you want to delete this habit and all its logged history?")) return false;

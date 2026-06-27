@@ -1,19 +1,22 @@
-import { db } from "../dexie/db"; // Adjust this path to match your Dexie instance location
+'use client'
+
+import { AppDatabase } from "../dexie/db";
 
 // Define the table keys that participate in the sync cycle
 export type SyncDatabaseTables = "habits" | "habitLogs";
 
-export async function runSyncEngine() {
+export async function runSyncEngine(dexieDb: AppDatabase) {
 	try {
 		console.log("🔄 [SYNC ENGINE] Synchronization cycle initiated...");
-		db.isSyncing = true;
+
+		dexieDb.isSyncing = true;
 
 		// ========================================================
 		// === STEP 1: Gather Local Changes (Push Preparation) ====
 		// ========================================================
 
 		// Fetch the last successful sync checkpoint milestone
-		const syncMetaRecord = await db.syncMeta.get("lastSyncedAt");
+		const syncMetaRecord = await dexieDb.syncMeta.get("lastSyncedAt");
 		const lastSyncedAt = syncMetaRecord ? syncMetaRecord.value : null;
 		const lastSyncedAtDate = lastSyncedAt ? new Date(lastSyncedAt) : new Date(0);
 
@@ -26,7 +29,7 @@ export async function runSyncEngine() {
 		const tableKeys: SyncDatabaseTables[] = ["habits", "habitLogs"];
 
 		for (const tableKey of tableKeys) {
-			const dirtyRows = await db
+			const dirtyRows = await dexieDb
 				.table(tableKey)
 				.where("updatedAt")
 				.above(lastSyncedAtDate)
@@ -73,7 +76,7 @@ export async function runSyncEngine() {
 
 		if (remoteTableKeys.length > 0) {
 			// Execute an atomic Read/Write transaction across all tables being modified
-			await db.transaction("rw", remoteTableKeys, async () => {
+			await dexieDb.transaction("rw", remoteTableKeys, async () => {
 				for (const tableKey of remoteTableKeys) {
 					const remoteRecords = serverDirtyRecords[tableKey];
 					if (!remoteRecords || remoteRecords.length === 0) continue;
@@ -95,7 +98,7 @@ export async function runSyncEngine() {
 					});
 
 					// bulkPut handles upsert operations automatically matching on primary key 'id'
-					await db.table(tableKey).bulkPut(hydratedRecords);
+					await dexieDb.table(tableKey).bulkPut(hydratedRecords);
 					console.debug(`📥 [SYNC ENGINE] Hydrated ${hydratedRecords.length} rows into local store: "${tableKey}"`);
 				}
 			});
@@ -104,7 +107,7 @@ export async function runSyncEngine() {
 		// ========================================================
 		// === STEP 5: Baseline Milestone Advancement =============
 		// ========================================================
-		await db.syncMeta.put({
+		await dexieDb.syncMeta.put({
 			key: "lastSyncedAt",
 			value: serverTime,
 		});
@@ -115,6 +118,6 @@ export async function runSyncEngine() {
 		console.error("❌ [SYNC ENGINE] The local sync engine encountered an execution fault:", error);
 		throw error;
 	} finally {
-		db.isSyncing = false;
+		dexieDb.isSyncing = false;
 	}
 }
