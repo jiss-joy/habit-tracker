@@ -9,6 +9,7 @@ export const habitLogs = pgTable('habit_logs', {
   userId: varchar().notNull(),
   logDate: text().notNull(),
   value: integer(),
+  isDeleted: integer().notNull().default(0),
   ...DEFAULT_COLUMNS,
 }, table => ({
   userLogUnique: uniqueIndex('user_habit_date_unique').on(table.userId, table.habitId, table.logDate),
