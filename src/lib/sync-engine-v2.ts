@@ -167,7 +167,7 @@ export async function runSyncEngine(dexieDb: AppDatabase) {
     // Advance local layout tracking token
     await dexieDb.syncMeta.put({
       key: "lastSyncId",
-      value: serverSequence.toString(),
+      value: serverSequence,
     });
 
     console.log(`✨ [SYNC ENGINE V2] Engine pipeline clear. Sequence: ${serverSequence}`);
