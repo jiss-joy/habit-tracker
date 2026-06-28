@@ -81,7 +81,9 @@ export async function runSyncEngine(dexieDb: AppDatabase) {
 					const remoteRecords = serverDirtyRecords[tableKey];
 					if (!remoteRecords || remoteRecords.length === 0) continue;
 
-					const hydratedRecords = remoteRecords.map((record) => {
+					const recordsToUpsert: unknown[] = [];
+
+					for (const record of remoteRecords) {
 						const baseHydration = {
 							...record,
 							createdAt: record.createdAt ? new Date(record.createdAt) : undefined,
@@ -94,12 +96,29 @@ export async function runSyncEngine(dexieDb: AppDatabase) {
 							baseHydration.logDate = baseHydration.logDate.split("T")[0];
 						}
 
-						return baseHydration;
-					});
+						// 3. ⚖️ Last-Write-Wins Conflict Resolution Check
+						const localExisting = await dexieDb.table(tableKey).get(baseHydration.id);
 
-					// bulkPut handles upsert operations automatically matching on primary key 'id'
-					await dexieDb.table(tableKey).bulkPut(hydratedRecords);
-					console.debug(`📥 [SYNC ENGINE] Hydrated ${hydratedRecords.length} rows into local store: "${tableKey}"`);
+						if (localExisting && localExisting.updatedAt) {
+							const localTime = new Date(localExisting.updatedAt).getTime();
+							const incomingTime = baseHydration.updatedAt ? baseHydration.updatedAt.getTime() : 0;
+
+							// If our local un-pushed change is newer or identical to the server timestamp, 
+							// reject the incoming server patch to prevent blowing away real-time user input.
+							if (localTime >= incomingTime) {
+								console.warn(`⚠️ [SYNC ENGINE] Conflict dropped for ${tableKey} [${baseHydration.id}]. Local data is newer.`);
+								continue;
+							}
+						}
+
+						recordsToUpsert.push(baseHydration);
+					};
+
+					// Bulk save only the items that survived conflict isolation
+					if (recordsToUpsert.length > 0) {
+						await dexieDb.table(tableKey).bulkPut(recordsToUpsert);
+						console.debug(`📥 [SYNC ENGINE] Hydrated & merged ${recordsToUpsert.length} rows into local store: "${tableKey}"`);
+					}
 				}
 			});
 		}

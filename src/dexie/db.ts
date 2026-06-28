@@ -17,10 +17,10 @@ export class AppDatabase extends Dexie {
 
   constructor() {
     super('AppDatabase');
-    this.version(2).stores({
+    this.version(3).stores({
       syncMeta: 'key',
-      habits: 'id, userId, type, updatedAt',
-      habitLogs: 'id, habitId, userId, logDate, updatedAt'
+      habits: 'id, userId, type, updatedAt, syncStatus',
+      habitLogs: 'id, habitId, userId, logDate, updatedAt, syncStatus',
     });
 
     this.use({
