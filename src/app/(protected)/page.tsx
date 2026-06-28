@@ -1,5 +1,5 @@
-import { AddHabitDialog } from "../components/add-habit-button";
-import { HabitList } from "../components/habit-list";
+import { AddHabitDialog } from "../../components/add-habit-button";
+import { HabitList } from "../../components/habit-list";
 
 export default function HabitDashboard() {
   return (

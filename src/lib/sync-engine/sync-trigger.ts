@@ -1,6 +1,6 @@
-// lib/sync-trigger.ts
-import { AppDatabase } from '../dexie/db';
-import { runSyncEngine } from './sync-engine';
+import { AppDatabase } from "@/src/dexie/db";
+import { runSyncEngine } from "./sync-engine-v2";
+
 
 const DEBOUNCE_DELAY = 3000;
 let timeoutId: ReturnType<typeof setTimeout> | null = null;

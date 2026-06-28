@@ -13,7 +13,7 @@ export const habitLogs = pgTable('habit_logs', {
   lastSyncId: bigint({ mode: 'number' }).notNull().default(sql`nextval('sync_sequence')`),
   ...DEFAULT_COLUMNS,
 }, table => [
-  index("habits_last_sync_id_idx").on(table.lastSyncId),
+  index("habit_logs_last_sync_id_idx").on(table.lastSyncId),
   uniqueIndex('user_habit_date_unique').on(table.userId, table.habitId, table.logDate),
 ])
 

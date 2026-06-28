@@ -1,4 +1,4 @@
-import { useDexieDb } from "../app/contexts/dexie-provider";
+import { useDexieDb } from "../contexts/dexie-provider";
 import { SyncStatus } from "../db/enums/sync-status";
 import { useUuid } from "./use-uuid";
 

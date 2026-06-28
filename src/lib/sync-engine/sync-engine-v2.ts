@@ -1,7 +1,7 @@
 'use client'
 
-import { SyncStatus } from "../db/enums/sync-status";
-import { AppDatabase } from "../dexie/db";
+import { SyncStatus } from "../../db/enums/sync-status";
+import { AppDatabase } from "../../dexie/db";
 
 export type SyncDatabaseTables = "habits" | "habitLogs";
 const tableKeys: SyncDatabaseTables[] = ["habits", "habitLogs"];

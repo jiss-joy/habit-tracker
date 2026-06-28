@@ -2,11 +2,11 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDexieDb } from "../dexie/db";
-import { generatePastNDays } from "../lib/date-helpers";
+import { generatePastNDays } from "../utils/date-helpers";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { HabitRow } from "./habit-row";
 import { Card } from "../components/shadcn/card"; // ⚡ Importing shadcn Card
-import { useDexieDb } from "../app/contexts/dexie-provider";
+import { useDexieDb } from "../contexts/dexie-provider";
 
 export const HabitList = () => {
   const MOCK_USER = '00000000-0000-0000-0000-000000000000';
