@@ -19,10 +19,14 @@ export function DexieProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if(!db) return;
 
+    if (navigator.onLine) {
+      triggerSync(db, false);
+    }
+
     const handleRevalidation = () => {
       console.log("⚡ [SYNC TRIGGER] Network change or window focus detected.");
       if (navigator.onLine) {
-        triggerSync(db);
+        triggerSync(db, true, 150);
       }
     };
 

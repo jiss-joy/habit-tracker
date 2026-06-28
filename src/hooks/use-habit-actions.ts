@@ -1,4 +1,5 @@
 import { useDexieDb } from "../app/contexts/dexie-provider";
+import { SyncStatus } from "../db/enums/sync-status";
 import { useUuid } from "./use-uuid";
 
 export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000000000') {
@@ -10,7 +11,11 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
     if (!confirm("Are you sure you want to delete this habit and all its logged history?")) return false;
 
     await db.transaction('rw', [db.habits, db.habitLogs], async () => {
-      await db.habits.update(habitId, { isDeleted: 1, updatedAt: new Date() });
+      await db.habits.update(habitId, {
+        isDeleted: 1,
+        syncStatus: SyncStatus.MODIFIED,
+        updatedAt: new Date()
+      });
 
       // 2. Cascade delete all associated logs for this habit locally
       // Fetch all logs connected to this habit
@@ -43,6 +48,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
         userId: userId,
         logDate: dateStr,
         value: 1,
+        syncStatus: SyncStatus.MODIFIED,
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -59,6 +65,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
       userId: userId,
       logDate: dateStr,
       value,
+      syncStatus: SyncStatus.MODIFIED,
       createdAt: new Date(),
       updatedAt: new Date()
     });

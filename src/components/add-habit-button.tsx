@@ -19,6 +19,7 @@ import {
 } from "../components/shadcn/field"
 import { useUuid } from '../hooks/use-uuid';
 import { useDexieDb } from '../app/contexts/dexie-provider';
+import { SyncStatus } from '../db/enums/sync-status';
 
 // 💡 Define strict validation schema matching your layout requirements
 const habitFormSchema = z.discriminatedUnion('type', [
@@ -89,6 +90,7 @@ export function AddHabitDialog() {
       targetValue: data.type === HabitType.MEASURABLE ? Number(data.targetValue) : null,
       unit: data.type === HabitType.MEASURABLE ? (data.unit ?? null) : null,
       isDeleted: 0,
+      syncStatus: SyncStatus.MODIFIED,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
