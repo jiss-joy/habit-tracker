@@ -19,6 +19,7 @@ export const habits = pgTable('habits', {
   lastSyncId: bigint({ mode: 'number' }).notNull().default(sql`nextval('sync_sequence')`),
   ...DEFAULT_COLUMNS,
 }, (table) => [
+  index('habits_last_sync_id_idx').on(table.lastSyncId),
   index("habits_updated_at_idx").on(table.updatedAt),
 ])
 
