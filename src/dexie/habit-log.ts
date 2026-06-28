@@ -4,6 +4,7 @@ export interface HabitLog {
   userId: string;
   logDate: string;
   value: number;
+  isDeleted?: 0 | 1;
   createdAt: Date;
   updatedAt: Date;
 }
