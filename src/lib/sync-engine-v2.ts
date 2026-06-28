@@ -18,7 +18,7 @@ export async function runSyncEngine(dexieDb: AppDatabase) {
 
     // Fetch local timeline integer checkpoint
     const syncMetaRecord = await dexieDb.syncMeta.get("lastSyncId");
-    const lastSyncId = syncMetaRecord ? (syncMetaRecord.value as unknown as number) : 0;
+    const lastSyncId = syncMetaRecord ? Number(syncMetaRecord.value) : 0;
 
     // ========================================================
     // === STEP 1: Atomic Read-and-Mark Phase =================

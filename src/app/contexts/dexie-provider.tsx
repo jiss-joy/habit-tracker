@@ -22,7 +22,7 @@ export function DexieProvider({ children }: { children: ReactNode }) {
     const handleRevalidation = () => {
       console.log("⚡ [SYNC TRIGGER] Network change or window focus detected.");
       if (navigator.onLine) {
-        triggerSync(db);
+        triggerSync(db, true, 150);
       }
     };
 
