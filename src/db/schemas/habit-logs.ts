@@ -1,4 +1,4 @@
-import type { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm'
 import { integer, pgTable, text, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { DEFAULT_COLUMNS } from '../helpers/default-columns'
 import { habits } from './habits'
@@ -10,6 +10,7 @@ export const habitLogs = pgTable('habit_logs', {
   logDate: text().notNull(),
   value: integer(),
   isDeleted: integer().notNull().default(0),
+  lastSyncId: integer().notNull().default(sql`nextval('sync_sequence')`),
   ...DEFAULT_COLUMNS,
 }, table => ({
   userLogUnique: uniqueIndex('user_habit_date_unique').on(table.userId, table.habitId, table.logDate),
