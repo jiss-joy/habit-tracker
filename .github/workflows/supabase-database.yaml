@@ -10,8 +10,8 @@ on:
   push:
     branches:
       - main
-    # paths:
-      # - 'apps/api/db/supabase/migrations/**'
+    paths:
+      - 'apps/api/db/supabase/migrations/**'
 
 jobs:
   deploy:
