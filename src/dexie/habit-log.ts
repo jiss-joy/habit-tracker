@@ -1,4 +1,4 @@
-import { SyncStatus } from "../db/enums/sync-status";
+import type { SyncStatus } from '../db/enums/sync-status';
 
 export interface HabitLog {
   id: string; // Primary Key

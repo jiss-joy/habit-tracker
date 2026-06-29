@@ -1,38 +1,38 @@
-import { db } from "@/src/db";
-import { SYNC_REGISTRY, SyncTableKey } from "@/src/db/sync-registry";
-import { auth } from "@/src/lib/auth/auth";
-import { and, eq, getTableColumns, gt, sql } from "drizzle-orm";
-import { headers } from "next/headers";
-import { NextResponse } from "next/server";
+import type { SyncTableKey } from '@/src/db/sync-registry';
+import { and, eq, getTableColumns, gt, sql } from 'drizzle-orm';
+import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { db } from '@/src/db';
+import { SYNC_REGISTRY } from '@/src/db/sync-registry';
+import { auth } from '@/src/lib/auth/auth';
 
 // TODO: Rename?
-type NetworkSyncRecord = {
+interface NetworkSyncRecord {
   id: string;
   createdAt: string;
   updatedAt: string;
   isDeleted?: number; // 🪦 Explicitly typing our integer tombstone flag (0 or 1)
   [columnName: string]: unknown;
-};
+}
 
-type RequestParams = {
+interface RequestParams {
   lastSyncId: number;
   localDirtyRecords: Record<SyncTableKey, NetworkSyncRecord[]>;
 }
 
-
 export async function POST(request: Request) {
   try {
-    const session = auth.api.getSession({
+    const session = await auth.api.getSession({
       headers: await headers(),
     });
-    if (!session) return NextResponse.json({ error: "Authentication failed" }, { status: 401 })
+    if (!session) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
     // 🔒 Extract active user identity context (replace with your auth session)
-    const userId = "current_authenticated_user_id";
+    const userId = 'current_authenticated_user_id';
     const body = await request.json() as RequestParams;
     const { lastSyncId, localDirtyRecords } = body;
 
-    if (typeof lastSyncId !== "number" || !localDirtyRecords) {
-      return NextResponse.json({ error: "Malformed sync payload parameters." }, { status: 400 });
+    if (typeof lastSyncId !== 'number' || localDirtyRecords === null) {
+      return NextResponse.json({ error: 'Malformed sync payload parameters.' }, { status: 400 });
     }
 
     const serverDirtyRecords: Partial<Record<SyncTableKey, unknown[]>> = {};
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
       for (const key of tableKeys) {
         const records = localDirtyRecords[key];
-        if (!records || records.length === 0) continue;
+        if (records === null || records.length === 0) continue;
 
         const tableSchema = SYNC_REGISTRY[key];
         const columns = getTableColumns(tableSchema);
@@ -101,21 +101,22 @@ export async function POST(request: Request) {
           .where(
             and(
               eq(columns.userId, userId), // 🔒 Keep other users' modifications completely invisible
-              gt(columns.lastSyncId, lastSyncId)
-            )
+              gt(columns.lastSyncId, lastSyncId),
+            ),
           );
 
         serverDirtyRecords[key] = remoteChanges;
       }
-    })
+    });
 
     // 4. Return accurate current sequence location along with localized deltas
     return NextResponse.json({
       serverSequence: currentGlobalSequenceHead,
       serverDirtyRecords,
     });
-  } catch (error) {
-    console.error("Critical error inside global sequence sync pipeline backend:", error);
-    return NextResponse.json({ error: "Internal Synchronizer Error" }, { status: 500 });
+  }
+  catch (error) {
+    console.error('Critical error inside global sequence sync pipeline backend:', error);
+    return NextResponse.json({ error: 'Internal Synchronizer Error' }, { status: 500 });
   }
 }

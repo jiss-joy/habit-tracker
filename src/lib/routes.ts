@@ -1,6 +1,6 @@
 export const PUBLIC_ROUTES = [
   '/login',
-  '/register'
+  '/register',
 ] as const;
 
-export const AUTH_REDIRECT_ROUTE = '/login'
+export const AUTH_REDIRECT_ROUTE = '/login';

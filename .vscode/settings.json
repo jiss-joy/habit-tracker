@@ -1,6 +1,33 @@
 {
-    "cSpell.words": [
-        "dexie",
-        "supabase"
-    ]
+  "eslint.debug": true,
+  "eslint.useFlatConfig": true,
+  "eslint.options": {
+    "overrideConfigFile": "./eslint.config.mjs"
+  },
+  "eslint.workingDirectories": [
+    { "mode": "auto" }
+  ],
+  // Enable formatting globally on save
+  "editor.formatOnSave": true,
+
+  // Tell the editor to use ESLint as the default structural formatter
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+
+  // Auto-fix layout issues and style errors on every save execution
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.format.enable": true,
+  "editor.rulers": [120],
+  "editor.tabSize": 2,
+  "editor.indentSize": 2,
+  "files.autoSave": "onFocusChange",
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "workbench.iconTheme": "symbols",
+  "workbench.productIconTheme": "fluent-icons",
+  "editor.overtypeCursorStyle": "line",
+  "cSpell.words": [
+    "Dexie"
+  ]
 }
