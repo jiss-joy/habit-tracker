@@ -1,7 +1,7 @@
-import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { relations } from 'drizzle-orm';
+import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
-export const users = pgTable("users", {
+export const users = pgTable('users', {
   id: text().primaryKey(),
   name: text().notNull(),
   email: text().notNull().unique(),
@@ -15,7 +15,7 @@ export const users = pgTable("users", {
 });
 
 export const sessions = pgTable(
-  "sessions",
+  'sessions',
   {
     id: text().primaryKey(),
     expiresAt: timestamp().notNull(),
@@ -28,20 +28,20 @@ export const sessions = pgTable(
     userAgent: text(),
     userId: text()
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
+  table => [index('session_userId_idx').on(table.userId)],
 );
 
 export const accounts = pgTable(
-  "accounts",
+  'accounts',
   {
     id: text().primaryKey(),
     accountId: text().notNull(),
     providerId: text().notNull(),
     userId: text()
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: 'cascade' }),
     accessToken: text(),
     refreshToken: text(),
     idToken: text(),
@@ -54,11 +54,11 @@ export const accounts = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  table => [index('account_userId_idx').on(table.userId)],
 );
 
 export const verification = pgTable(
-  "verifications",
+  'verifications',
   {
     id: text().primaryKey(),
     identifier: text().notNull(),
@@ -70,7 +70,7 @@ export const verification = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+  table => [index('verification_identifier_idx').on(table.identifier)],
 );
 
 export const userRelations = relations(users, ({ many }) => ({

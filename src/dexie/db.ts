@@ -1,14 +1,14 @@
-
-import Dexie, { type Table } from 'dexie';
-import { Habit } from './habit';
-import { HabitLog } from './habit-log';
-import { SyncMeta } from './sync-meta';
+import type { Table } from 'dexie';
+import type { Habit } from './habit';
+import type { HabitLog } from './habit-log';
+import type { SyncMeta } from './sync-meta';
+import Dexie from 'dexie';
 import { triggerSync } from '../lib/sync-engine/sync-trigger';
 
 export type SyncDatabaseTables = Exclude<keyof AppDatabase, keyof import('dexie').Dexie | 'syncMeta'>;
 
 export class AppDatabase extends Dexie {
-  syncMeta!: Table<SyncMeta, string>
+  syncMeta!: Table<SyncMeta, string>;
   habits!: Table<Habit, string>;
   habitLogs!: Table<HabitLog, string>;
 
@@ -24,8 +24,8 @@ export class AppDatabase extends Dexie {
     });
 
     this.use({
-      stack: "dbcore",
-      name: "debounce-mutation-listener",
+      stack: 'dbcore',
+      name: 'debounce-mutation-listener',
       create: (downlevel) => {
         return {
           ...downlevel,
@@ -42,11 +42,11 @@ export class AppDatabase extends Dexie {
                 }
 
                 return result;
-              }
-            }
-          }
-        }
-      }
+              },
+            };
+          },
+        };
+      },
     });
   }
 }
@@ -56,7 +56,7 @@ let currentUserId: string | undefined;
 
 export function getDexieDb(userId: string): AppDatabase {
   if (typeof window === 'undefined') {
-    throw new Error('Dexie is not available on the server side.');
+    throw new TypeError('Dexie is not available on the server side.');
   }
 
   // Close the db instance if it does not belong to the signed in user.

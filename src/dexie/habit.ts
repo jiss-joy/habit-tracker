@@ -1,6 +1,6 @@
-import { HabitFrequencies } from "../db/enums/habit-frequency";
-import { HabitType } from "../db/enums/habit-type";
-import { SyncStatus } from "../db/enums/sync-status";
+import type { HabitFrequencies } from '../db/enums/habit-frequency';
+import type { HabitType } from '../db/enums/habit-type';
+import type { SyncStatus } from '../db/enums/sync-status';
 
 export interface Habit {
   id: string;

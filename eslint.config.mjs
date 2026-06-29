@@ -1,5 +1,4 @@
-import antfu from '@antfu/eslint-config'
-import format from 'eslint-plugin-format'
+import antfu from '@antfu/eslint-config';
 
 export default antfu(
   {
@@ -8,28 +7,25 @@ export default antfu(
     typescript: {
       tsconfigPath: 'tsconfig.json',
     },
+    tailwind: true,
     jsdoc: false,
     toml: false,
     markdown: false,
     ignores: ['src/components/shadcn/**'],
 
     lessOpinionated: true,
-    isInEditor: false,
+    isInEditor: true,
 
-    stylistic: false
-  },
+    formatters: {
+      css: true,
+      html: true,
+      markdown: true,
+    },
 
-   // use prettier to format JavaScript/TypeScript with TailwindCSS classnames sorting
-  {
-    files: ['**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}'],
-    languageOptions: {
-      parser: format.parserPlain,
-    },
-    plugins: {
-      format,
-    },
-    rules: {
-      'format/prettier': ['error', { sortTailwindcss: {} }],
+    stylistic: {
+      indent: 2,
+      quotes: 'single',
+      semi: true,
     },
   },
 
@@ -38,20 +34,23 @@ export default antfu(
     rules: {
       'curly': ['error', 'multi-line'],
       'node/prefer-global/process': ['error', 'always'],
-    }
+    },
   },
   // --- Typescript-specific rule overrides ---
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
+      'ts/strict-boolean-expressions': 'off',
+      'ts/no-empty-function': ['error', { allow: ['arrowFunctions'] }],
+      'ts/no-misused-promises': 'warn',
       'ts/switch-exhaustiveness-check': [
         'error',
         {
           allowDefaultCaseForExhaustiveSwitch: true,
           considerDefaultExhaustiveForUnions: true,
-          requireDefaultForNonUnion: false
-        }
-      ]
-    }
-  }
-)
+          requireDefaultForNonUnion: false,
+        },
+      ],
+    },
+  },
+);

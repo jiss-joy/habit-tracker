@@ -1,142 +1,194 @@
-'use client'
+'use client';
 
-import { AppDatabase } from "../../dexie/db";
+import type { AppDatabase } from '../../dexie/db';
+import { SyncStatus } from '../../db/enums/sync-status';
 
-// Define the table keys that participate in the sync cycle
-export type SyncDatabaseTables = "habits" | "habitLogs";
+export type SyncDatabaseTables = 'habits' | 'habitLogs';
+const tableKeys: SyncDatabaseTables[] = ['habits', 'habitLogs'];
 
 export async function runSyncEngine(dexieDb: AppDatabase) {
-	try {
-		console.log("🔄 [SYNC ENGINE] Synchronization cycle initiated...");
+  if (dexieDb.isSyncing) return;
 
-		dexieDb.isSyncing = true;
+  const batchIds: Record<SyncDatabaseTables, string[]> = { habits: [], habitLogs: [] };
+  const localDirtyRecords: Record<SyncDatabaseTables, any[]> = { habits: [], habitLogs: [] };
 
-		// ========================================================
-		// === STEP 1: Gather Local Changes (Push Preparation) ====
-		// ========================================================
+  try {
+    dexieDb.isSyncing = true;
 
-		// Fetch the last successful sync checkpoint milestone
-		const syncMetaRecord = await dexieDb.syncMeta.get("lastSyncedAt");
-		const lastSyncedAt = syncMetaRecord ? syncMetaRecord.value : null;
-		const lastSyncedAtDate = lastSyncedAt ? new Date(lastSyncedAt) : new Date(0);
+    // Fetch local timeline integer checkpoint
+    const syncMetaRecord = await dexieDb.syncMeta.get('lastSyncId');
+    const lastSyncId = syncMetaRecord ? Number(syncMetaRecord.value) : 0;
 
-		const localDirtyRecords: Record<SyncDatabaseTables, any[]> = {
-			habits: [],
-			habitLogs: [],
-		};
+    // ========================================================
+    // === STEP 1: Atomic Read-and-Mark Phase =================
+    // ========================================================
+    await dexieDb.transaction('rw', tableKeys, async () => {
+      for (const tableKey of tableKeys) {
+        const dirtyRows = await dexieDb
+          .table(tableKey)
+          .where('syncStatus')
+          .equals(SyncStatus.MODIFIED)
+          .toArray();
 
-		// Scan all participating tables for records modified since the last checkpoint
-		const tableKeys: SyncDatabaseTables[] = ["habits", "habitLogs"];
+        batchIds[tableKey] = dirtyRows.map(row => row.id);
+        localDirtyRecords[tableKey] = dirtyRows;
 
-		for (const tableKey of tableKeys) {
-			const dirtyRows = await dexieDb
-				.table(tableKey)
-				.where("updatedAt")
-				.above(lastSyncedAtDate)
-				.toArray();
+        if (batchIds[tableKey].length > 0) {
+          await dexieDb.table(tableKey)
+            .where('id')
+            .anyOf(batchIds[tableKey])
+            .modify({ syncStatus: SyncStatus.SYNCING });
+        }
+      }
+    });
 
-			localDirtyRecords[tableKey] = dirtyRows;
-		}
+    // ========================================================
+    // === STEP 2 & 3: Network Pipe Transmission ==============
+    // ========================================================
+    const response = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lastSyncId, // 👈 Maps to your backend parameters
+        localDirtyRecords,
+      }),
+    });
 
-		// Check if we even need to execute network traffic
-		const hasLocalChanges = Object.values(localDirtyRecords).some(rows => rows.length > 0);
-		if (!hasLocalChanges && lastSyncedAt) {
-			console.log("😴 [SYNC ENGINE] No local modifications found. Proceeding to fetch cloud delta...");
-		}
+    if (!response.ok) {
+      throw new Error(`Server responded with execution status code: ${response.status}`);
+    }
 
-		// ========================================================
-		// === STEP 2 & 3: Network Pipe Transmission ==============
-		// ========================================================
-		const response = await fetch("/api/sync", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				lastSyncedAt,
-				localDirtyRecords,
-			}),
-		});
+    const { serverSequence, serverDirtyRecords } = await response.json() as {
+      serverSequence: number;
+      serverDirtyRecords: Partial<Record<SyncDatabaseTables, any[]>>;
+    };
 
-		// Network safety guard
-		if (!response.ok) {
-			throw new Error(`[SYNC ENGINE] Cloud synchronization endpoint rejected request with status: ${response.status}`);
-		}
+    // ========================================================
+    // === STEP 4: Pull & Merge with Clock Tie-Breaker ========
+    // ========================================================
+    const remoteTableKeys = Object.keys(serverDirtyRecords) as SyncDatabaseTables[];
 
-		// Parsing Cloud Response (Consuming the body stream exactly ONCE)
-		const { serverTime, serverDirtyRecords } = await response.json() as {
-			serverTime: string;
-			serverDirtyRecords: Partial<Record<SyncDatabaseTables, any[]>>;
-		};
+    if (remoteTableKeys.length > 0) {
+      await dexieDb.transaction('rw', remoteTableKeys, async () => {
+        for (const tableKey of remoteTableKeys) {
+          const remoteRecords = serverDirtyRecords[tableKey];
+          if (!remoteRecords || remoteRecords.length === 0) continue;
 
-		// ========================================================
-		// === STEP 4: Merging Server Changes into IndexedDB ======
-		// ========================================================
-		const remoteTableKeys = Object.keys(serverDirtyRecords) as SyncDatabaseTables[];
+          const recordsToUpsert: any[] = [];
+          const idsToHardDeleteLocally: string[] = [];
 
-		if (remoteTableKeys.length > 0) {
-			// Execute an atomic Read/Write transaction across all tables being modified
-			await dexieDb.transaction("rw", remoteTableKeys, async () => {
-				for (const tableKey of remoteTableKeys) {
-					const remoteRecords = serverDirtyRecords[tableKey];
-					if (!remoteRecords || remoteRecords.length === 0) continue;
+          for (const record of remoteRecords) {
+            const baseHydration = {
+              ...record,
+              createdAt: record.createdAt ? new Date(record.createdAt) : undefined,
+              updatedAt: record.updatedAt ? new Date(record.updatedAt) : undefined,
+            };
 
-					const recordsToUpsert: unknown[] = [];
+            if (tableKey === 'habitLogs' && typeof baseHydration.logDate === 'string') {
+              baseHydration.logDate = baseHydration.logDate.split('T')[0];
+            }
 
-					for (const record of remoteRecords) {
-						const baseHydration = {
-							...record,
-							createdAt: record.createdAt ? new Date(record.createdAt) : undefined,
-							updatedAt: record.updatedAt ? new Date(record.updatedAt) : undefined,
-						};
+            const localExisting = await dexieDb.table(tableKey).get(baseHydration.id);
 
-						// 2. 🛡️ Table-Specific Context Interceptor
-						// This keeps the engine abstract while fixing the string format edge case
-						if (tableKey === "habitLogs" && typeof baseHydration.logDate === "string") {
-							baseHydration.logDate = baseHydration.logDate.split("T")[0];
-						}
+            // Chronological tie-breaker
+            if (localExisting) {
+              if (localExisting.syncStatus === SyncStatus.MODIFIED || localExisting.syncStatus === SyncStatus.SYNCING) {
+                const localTime = new Date(localExisting.updatedAt).getTime();
+                const incomingTime = baseHydration.updatedAt ? baseHydration.updatedAt.getTime() : 0;
 
-						// 3. ⚖️ Last-Write-Wins Conflict Resolution Check
-						const localExisting = await dexieDb.table(tableKey).get(baseHydration.id);
+                if (localTime >= incomingTime) {
+                  console.warn(`⚠️ [SYNC] Conflict dropped for ${tableKey} [${baseHydration.id}]. Local is newer.`);
+                  continue;
+                }
+              }
+            }
 
-						if (localExisting && localExisting.updatedAt) {
-							const localTime = new Date(localExisting.updatedAt).getTime();
-							const incomingTime = baseHydration.updatedAt ? baseHydration.updatedAt.getTime() : 0;
+            // Optimization: If a record coming down from the server is marked deleted,
+            // we can safely hard-delete it locally right now to clear up IndexedDB storage.
+            if (baseHydration.isDeleted === 1) {
+              idsToHardDeleteLocally.push(baseHydration.id);
+            }
+            else {
+              baseHydration.syncStatus = SyncStatus.SYNCED;
+              recordsToUpsert.push(baseHydration);
+            }
+          }
 
-							// If our local un-pushed change is newer or identical to the server timestamp, 
-							// reject the incoming server patch to prevent blowing away real-time user input.
-							if (localTime >= incomingTime) {
-								console.warn(`⚠️ [SYNC ENGINE] Conflict dropped for ${tableKey} [${baseHydration.id}]. Local data is newer.`);
-								continue;
-							}
-						}
+          if (recordsToUpsert.length > 0) {
+            await dexieDb.table(tableKey).bulkPut(recordsToUpsert);
+          }
+          if (idsToHardDeleteLocally.length > 0) {
+            await dexieDb.table(tableKey).bulkDelete(idsToHardDeleteLocally);
+          }
+        }
+      });
+    }
 
-						recordsToUpsert.push(baseHydration);
-					};
+    // ========================================================
+    // === STEP 5: Atomic Commit & Milestone Advancement =======
+    // ========================================================
+    await dexieDb.transaction('rw', tableKeys, async () => {
+      for (const tableKey of tableKeys) {
+        if (batchIds[tableKey].length > 0) {
+          // Separate clean records from locally pushed deleted records
+          const syncedRecords = await dexieDb.table(tableKey)
+            .where('id')
+            .anyOf(batchIds[tableKey])
+            .and(row => row.syncStatus === SyncStatus.SYNCING)
+            .toArray();
 
-					// Bulk save only the items that survived conflict isolation
-					if (recordsToUpsert.length > 0) {
-						await dexieDb.table(tableKey).bulkPut(recordsToUpsert);
-						console.debug(`📥 [SYNC ENGINE] Hydrated & merged ${recordsToUpsert.length} rows into local store: "${tableKey}"`);
-					}
-				}
-			});
-		}
+          const cleanIds: string[] = [];
+          const deletedIds: string[] = [];
 
-		// ========================================================
-		// === STEP 5: Baseline Milestone Advancement =============
-		// ========================================================
-		await dexieDb.syncMeta.put({
-			key: "lastSyncedAt",
-			value: serverTime,
-		});
+          for (const row of syncedRecords) {
+            if (row.isDeleted === 1) {
+              deletedIds.push(row.id);
+            }
+            else {
+              cleanIds.push(row.id);
+            }
+          }
 
-		console.log(`✨ [SYNC ENGINE] Sync cycle completed successfully. Baseline advanced to: ${serverTime}`);
+          // Regular modifications change state to 'synced'
+          if (cleanIds.length > 0) {
+            await dexieDb.table(tableKey).where('id').anyOf(cleanIds).modify({ syncStatus: SyncStatus.SYNCED });
+          }
 
-	} catch (error) {
-		console.error("❌ [SYNC ENGINE] The local sync engine encountered an execution fault:", error);
-		throw error;
-	} finally {
-		dexieDb.isSyncing = false;
-	}
+          // Pushed deletes have safely hit Postgres; we can wipe them completely from device storage
+          if (deletedIds.length > 0) {
+            await dexieDb.table(tableKey).bulkDelete(deletedIds);
+          }
+        }
+      }
+    });
+
+    // Advance local layout tracking token
+    await dexieDb.syncMeta.put({
+      key: 'lastSyncId',
+      value: serverSequence,
+    });
+  }
+  catch (error) {
+    console.error('❌ [SYNC ENGINE V2] Execution fault encountered. Rolling back states:', error);
+    try {
+      await dexieDb.transaction('rw', tableKeys, async () => {
+        for (const tableKey of tableKeys) {
+          if (batchIds[tableKey].length > 0) {
+            await dexieDb.table(tableKey)
+              .where('id')
+              .anyOf(batchIds[tableKey])
+              .and(row => row.syncStatus === SyncStatus.SYNCING)
+              .modify({ syncStatus: SyncStatus.MODIFIED });
+          }
+        }
+      });
+    }
+    catch (rollbackError) {
+      console.error('🚨 [CRITICAL] Failed to execute database restoration sweeps:', rollbackError);
+    }
+    throw error;
+  }
+  finally {
+    dexieDb.isSyncing = false;
+  }
 }

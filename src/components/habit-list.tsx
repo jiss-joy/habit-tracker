@@ -1,22 +1,22 @@
 'use client';
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { getDexieDb } from "../dexie/db";
-import { generatePastNDays } from "../utils/date-helpers";
-import { useHabitActions } from "../hooks/use-habit-actions";
-import { HabitRow } from "./habit-row";
-import { Card } from "../components/shadcn/card"; // ⚡ Importing shadcn Card
-import { useDexieDb } from "../contexts/dexie-provider";
+import { useLiveQuery } from 'dexie-react-hooks';
+import { Card } from '../components/shadcn/card'; // ⚡ Importing shadcn Card
+import { useDexieDb } from '../contexts/dexie-context';
+import { getDexieDb } from '../dexie/db';
+import { useHabitActions } from '../hooks/use-habit-actions';
+import { generatePastNDays } from '../utils/date-helpers';
+import { HabitRow } from './habit-row';
 
 export const HabitList = () => {
   const MOCK_USER = '00000000-0000-0000-0000-000000000000';
   const db = useDexieDb();
 
-  const habits = useLiveQuery(() => 
-    db.habits.toArray().then(rows => rows.filter(habit => habit.isDeleted !== 1))
+  const habits = useLiveQuery(async () =>
+    db.habits.toArray().then(rows => rows.filter(habit => habit.isDeleted !== 1)),
   );
-  const logs = useLiveQuery(() => 
-    db.habitLogs.where('userId').equals(MOCK_USER).toArray()
+  const logs = useLiveQuery(async () =>
+    db.habitLogs.where('userId').equals(MOCK_USER).toArray(),
   );
 
   const timeline = generatePastNDays(10);
@@ -28,7 +28,7 @@ export const HabitList = () => {
       <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 space-y-4">
         <div className="h-6 w-1/4 bg-zinc-100 dark:bg-zinc-900 animate-pulse rounded-md" />
         <div className="space-y-3">
-          {[1, 2, 3].map((n) => (
+          {[1, 2, 3].map(n => (
             <div key={n} className="h-14 w-full bg-zinc-100 dark:bg-zinc-900 animate-pulse rounded-lg" />
           ))}
         </div>
@@ -53,7 +53,7 @@ export const HabitList = () => {
   return (
     <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm overflow-x-auto">
       <div className="min-w-[768px] p-6 space-y-4">
-        
+
         {/* Header Timeline Row Layout */}
         <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-900">
           <div className="w-1/3">
@@ -61,9 +61,9 @@ export const HabitList = () => {
               Habit Profile
             </span>
           </div>
-          
+
           <div className="w-2/3 grid grid-cols-10 gap-2 text-center">
-            {timeline.map((day) => (
+            {timeline.map(day => (
               <div key={day.dateStr} className="space-y-1">
                 <div className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
                   {day.label}
@@ -78,7 +78,7 @@ export const HabitList = () => {
 
         {/* Dynamic Matrix Rows */}
         <div className="space-y-2.5">
-          {habits.map((habit) => (
+          {habits.map(habit => (
             <HabitRow
               key={habit.id}
               habit={habit}

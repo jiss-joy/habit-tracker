@@ -1,29 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { signIn as login } from "../lib/auth/auth-client";
-import { cn } from "../utils/utils";
+import { Button } from '../components/shadcn/button';
 
-import { Button } from "../components/shadcn/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/shadcn/card";
+} from '../components/shadcn/card';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "../components/shadcn/field";
-import { Input } from "../components/shadcn/input";
-import test from 'node:test';
+} from '../components/shadcn/field';
+import { Input } from '../components/shadcn/input';
+import { signIn as login } from '../lib/auth/auth-client';
+import { cn } from '../utils/utils';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address').trim().toLowerCase(),
@@ -35,7 +34,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export function LoginForm({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<'div'>) {
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -54,9 +53,9 @@ export function LoginForm({
 
   function fillCredentials() {
     setValues({
-      email: "test@test.com",
-      password: "Test1234"
-    })
+      email: 'test@test.com',
+      password: 'Test1234',
+    });
   }
 
   async function onSubmit(values: LoginFormValues) {
@@ -64,7 +63,7 @@ export function LoginForm({
       {
         email: values.email,
         password: values.password,
-        callbackURL: "/", // BetterAuth handles the routing session on verification
+        callbackURL: '/', // BetterAuth handles the routing session on verification
       },
       {
         onRequest: () => {
@@ -76,14 +75,14 @@ export function LoginForm({
         onError: (ctx) => {
           setIsLoading(false);
           // Gracefully pipe server-side errors (e.g. "Invalid email or password") into the layout
-          setError("root", { message: ctx.error.message });
+          setError('root', { message: ctx.error.message });
         },
-      }
+      },
     );
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
@@ -101,7 +100,7 @@ export function LoginForm({
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <div className='flex flex-row w-max justify-between'>
+                    <div className="flex flex-row w-max justify-between">
                       <FieldLabel htmlFor="email">Email</FieldLabel>
                       <Button variant="link" onClick={fillCredentials}>Fill credentials</Button>
                     </div>
@@ -154,7 +153,7 @@ export function LoginForm({
 
                 <div className="flex flex-col gap-2">
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Logging in..." : "Login"}
+                    {isLoading ? 'Logging in...' : 'Login'}
                   </Button>
 
                   <Button variant="outline" type="button" className="w-full" disabled={isLoading}>
@@ -163,7 +162,8 @@ export function LoginForm({
                 </div>
 
                 <FieldDescription className="text-center mt-4">
-                  Don&apos;t have an account?{" "}
+                  Don&apos;t have an account?
+                  {' '}
                   <a href="/register" className="underline underline-offset-4 hover:text-primary">
                     Sign up
                   </a>

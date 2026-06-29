@@ -4,5 +4,5 @@
  * @returns readonly [string, ...string[]] - The Postgres enum.
  */
 export function enumToPgEnum(enumObject: Record<string, string>): readonly [string, ...string[]] {
-  return Object.values(enumObject).map((obj) => obj) as [string, ...string[]];
+  return Object.values(enumObject).map(obj => obj) as [string, ...string[]];
 }

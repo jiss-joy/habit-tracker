@@ -1,8 +1,9 @@
-import { sql, type InferInsertModel, type InferSelectModel } from 'drizzle-orm'
-import { bigint, boolean, index, integer, pgSequence, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
-import { DEFAULT_COLUMNS } from '../helpers/default-columns'
-import { HabitFrequencies, habitFrequencyEnum } from '../enums/habit-frequency'
-import { HabitType, habitTypeEnum } from '../enums/habit-type'
+import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+import { bigint, boolean, index, integer, pgSequence, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import { HabitFrequencies, habitFrequencyEnum } from '../enums/habit-frequency';
+import { HabitType, habitTypeEnum } from '../enums/habit-type';
+import { DEFAULT_COLUMNS } from '../helpers/default-columns';
 
 export const habits = pgTable('habits', {
   id: uuid().primaryKey(),
@@ -18,13 +19,13 @@ export const habits = pgTable('habits', {
   isDeleted: integer().notNull().default(0),
   lastSyncId: bigint({ mode: 'number' }).notNull().default(sql`nextval('sync_sequence')`),
   ...DEFAULT_COLUMNS,
-}, (table) => [
+}, table => [
   index('habits_last_sync_id_idx').on(table.lastSyncId),
-  index("habits_updated_at_idx").on(table.updatedAt),
-])
+  index('habits_updated_at_idx').on(table.updatedAt),
+]);
 
 /**
  * Type definitions for the habits table
  */
-export type InsertHabitsType = InferInsertModel<typeof habits>
-export type SelectHabitsType = InferSelectModel<typeof habits>
+export type InsertHabitsType = InferInsertModel<typeof habits>;
+export type SelectHabitsType = InferSelectModel<typeof habits>;

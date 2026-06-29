@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useDexieDb } from '../contexts/dexie-provider';
 import { triggerSync } from '../lib/sync-engine/sync-trigger';
+import { useDexieDb } from './use-dexie-db';
 
 export function useSyncOnNetworkChange() {
   const db = useDexieDb();
@@ -13,7 +13,7 @@ export function useSyncOnNetworkChange() {
     }
 
     const handleRevalidation = () => {
-      console.log("⚡ [SYNC TRIGGER] Network change or window focus detected.");
+      console.log('⚡ [SYNC TRIGGER] Network change or window focus detected.');
       if (navigator.onLine) {
         triggerSync(db, true, 150);
       }

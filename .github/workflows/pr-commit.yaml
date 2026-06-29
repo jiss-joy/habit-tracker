@@ -2,7 +2,7 @@ name: PR Commit CI
 on:
   push:
     branches:
-      - "**"
+      - '**'
 
 jobs:
   ci:

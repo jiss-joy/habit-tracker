@@ -11,7 +11,7 @@ on:
     branches:
       - develop
     paths:
-      - "apps/api/db/supabase/migrations/**"
+      - 'apps/api/db/supabase/migrations/**'
 
 jobs:
   deploy:
@@ -47,7 +47,7 @@ jobs:
         run: supabase db push
 
       # - name: Deploy migrations to develop
-        # run: echo 'y' | supabase db reset --linked --workdir=apps/api/db
+      # run: echo 'y' | supabase db reset --linked --workdir=apps/api/db
 
       - name: Reset seed data
         run: npm run db:seed:develop

@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef } from "react";
-import { Card } from "../components/shadcn/card";
-import { Button } from "../components/shadcn/button"; // Assuming you have shadcn button installed
-import { Check, Trash2 } from "lucide-react"; // Shadcn default icon library
+import { Check, Trash2 } from 'lucide-react'; // Shadcn default icon library
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '../components/shadcn/button'; // Assuming you have shadcn button installed
+import { Card } from '../components/shadcn/card';
 
-type Habit = {
+interface Habit {
   id: string;
   name: string;
   streak: number;
   isDeleted: number;
-};
+}
 
 interface HabitCardProps {
   habit: Habit;
@@ -20,7 +20,7 @@ interface HabitCardProps {
 
 export function HabitCard({ habit, onIncrement, onDelete }: HabitCardProps) {
   const [isSyncing, setIsSyncing] = useState(false);
-  
+
   // Track values to ensure we only animate background sync modifications
   const prevStreakRef = useRef(habit.streak);
   const prevNameRef = useRef(habit.name);
@@ -29,7 +29,7 @@ export function HabitCard({ habit, onIncrement, onDelete }: HabitCardProps) {
     // Intercept cloud data updates arriving over the wire
     if (prevStreakRef.current !== habit.streak || prevNameRef.current !== habit.name) {
       setIsSyncing(true);
-      
+
       prevStreakRef.current = habit.streak;
       prevNameRef.current = habit.name;
     }
@@ -39,9 +39,9 @@ export function HabitCard({ habit, onIncrement, onDelete }: HabitCardProps) {
     <Card
       onAnimationEnd={() => setIsSyncing(false)}
       className={`p-5 flex items-center justify-between transition-all duration-300 shadow-sm border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 ${
-        isSyncing 
-          ? "animate-sync-flash" 
-          : ""
+        isSyncing
+          ? 'animate-sync-flash'
+          : ''
       }`}
     >
       {/* Habit Details */}
@@ -51,7 +51,11 @@ export function HabitCard({ habit, onIncrement, onDelete }: HabitCardProps) {
         </span>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200/60 dark:border-zinc-800/50">
-            🔥 {habit.streak} day streak
+            🔥
+            {' '}
+            {habit.streak}
+            {' '}
+            day streak
           </span>
         </div>
       </div>
