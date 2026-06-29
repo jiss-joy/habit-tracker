@@ -9,7 +9,7 @@ name: Push database changes to supabase
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
       - 'apps/api/db/supabase/migrations/**'
 
