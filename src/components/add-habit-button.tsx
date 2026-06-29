@@ -18,7 +18,7 @@ import {
   FieldLabel,
 } from "../components/shadcn/field"
 import { useUuid } from '../hooks/use-uuid';
-import { useDexieDb } from '../app/contexts/dexie-provider';
+import { useDexieDb } from '../contexts/dexie-provider';
 import { SyncStatus } from '../db/enums/sync-status';
 
 // 💡 Define strict validation schema matching your layout requirements

@@ -2,43 +2,22 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { getDexieDb, type AppDatabase } from '../../dexie/db';
-import { triggerSync } from '../../lib/sync-trigger';
+import { getDexieDb, type AppDatabase } from '../dexie/db';
+import { useSession } from '@/src/lib/auth/auth-client';
 
 const DbContext = createContext<AppDatabase | null>(null);
 
 export function DexieProvider({ children }: { children: ReactNode }) {
+  const { data: authData } = useSession();
   const [db, setDb] = useState<AppDatabase | null>(null);
 
   useEffect(() => {
-    const dbInstance = getDexieDb();
+    if(!authData?.user) return;
+    const {user} = authData;
+    const dbInstance = getDexieDb(user.id);
 
     setDb(dbInstance);
-  }, []);
-
-  useEffect(() => {
-    if(!db) return;
-
-    if (navigator.onLine) {
-      triggerSync(db, false);
-    }
-
-    const handleRevalidation = () => {
-      console.log("⚡ [SYNC TRIGGER] Network change or window focus detected.");
-      if (navigator.onLine) {
-        triggerSync(db, true, 150);
-      }
-    };
-
-    window.addEventListener('online', handleRevalidation);
-    window.addEventListener('focus', handleRevalidation);
-
-    // Clean up event listeners on unmount to prevent memory leaks
-    return () => {
-      window.removeEventListener('online', handleRevalidation);
-      window.removeEventListener('focus', handleRevalidation);
-    };
-  }, [db]);
+  }, [authData?.user?.id]);
 
   if (!db) {
     return <div className="flex h-screen w-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">

@@ -3,7 +3,7 @@ import Dexie, { type Table } from 'dexie';
 import { Habit } from './habit';
 import { HabitLog } from './habit-log';
 import { SyncMeta } from './sync-meta';
-import { triggerSync } from '../lib/sync-trigger';
+import { triggerSync } from '../lib/sync-engine/sync-trigger';
 
 export type SyncDatabaseTables = Exclude<keyof AppDatabase, keyof import('dexie').Dexie | 'syncMeta'>;
 
@@ -15,8 +15,8 @@ export class AppDatabase extends Dexie {
   // 2. Lock flag to prevent feedback loops
   public isSyncing = false;
 
-  constructor() {
-    super('AppDatabase');
+  constructor(userId: string) {
+    super(`AppDatabase_${userId}`);
     this.version(3).stores({
       syncMeta: 'key',
       habits: 'id, userId, type, updatedAt, syncStatus',
@@ -52,13 +52,23 @@ export class AppDatabase extends Dexie {
 }
 
 let db: AppDatabase | undefined;
+let currentUserId: string | undefined;
 
-export function getDexieDb(): AppDatabase {
+export function getDexieDb(userId: string): AppDatabase {
   if (typeof window === 'undefined') {
     throw new Error('Dexie is not available on the server side.');
   }
 
-  if (!db) db = new AppDatabase();
+  // Close the db instance if it does not belong to the signed in user.
+  if (db && currentUserId !== userId) {
+    db.close(); // release the previous user's db connection
+    db = undefined;
+  }
+
+  if (!db) {
+    db = new AppDatabase(userId);
+    currentUserId = userId;
+  }
 
   return db;
 }

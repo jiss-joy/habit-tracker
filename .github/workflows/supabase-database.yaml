@@ -1,0 +1,53 @@
+# This workflow will:
+# 1. Analyze the project for any issues.
+# 2. Deploy migrations to the `development` database.
+# 3. Reset the seed data in the `development` database.
+# !! NOTE: This will reset all the seed data in the development database.
+
+name: Push database changes to supabase
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "apps/api/db/supabase/migrations/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      SUPABASE_PROJECT_ID: ${{ secrets.DEVELOP_SUPABASE_PROJECT_ID }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.DEVELOP_SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DATABASE_URL: ${{ secrets.DEVELOP_DATABASE_URL }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.DEVELOP_DB_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Environment
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase development project
+        run: supabase link --project-ref $SUPABASE_PROJECT_ID --workdir=apps/api/db
+
+      - name: Deploy migrations to cloud DB
+        run: supabase db push
+
+      # - name: Deploy migrations to develop
+        # run: echo 'y' | supabase db reset --linked --workdir=apps/api/db
+
+      - name: Reset seed data
+        run: npm run db:seed:develop

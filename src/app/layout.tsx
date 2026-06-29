@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/src/lib/utils";
-import { DexieProvider } from "./contexts/dexie-provider";
+import { cn } from "@/src/utils/utils";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -32,9 +31,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <DexieProvider>
-          {children}
-        </DexieProvider>
+        {children}
       </body>
     </html>
   );

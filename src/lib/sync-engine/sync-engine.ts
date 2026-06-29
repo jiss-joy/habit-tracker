@@ -1,6 +1,6 @@
 'use client'
 
-import { AppDatabase } from "../dexie/db";
+import { AppDatabase } from "../../dexie/db";
 
 // Define the table keys that participate in the sync cycle
 export type SyncDatabaseTables = "habits" | "habitLogs";
