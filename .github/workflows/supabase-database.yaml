@@ -44,7 +44,7 @@ jobs:
         run: supabase db reset --db-url "$SUPABASE_DATABASE_URL" --workdir=src
 
       - name: Deploy migrations
-        run: supabase db push --db-url "$SUPABASE_DATABASE_URL" --workdir=src
+        run: echo 'y' | supabase db push --db-url "$SUPABASE_DATABASE_URL" --workdir=src
 
       - name: Reset seed data
         run: bun run db:seed
