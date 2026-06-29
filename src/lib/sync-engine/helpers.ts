@@ -2,7 +2,7 @@ import type { Table } from 'dexie';
 import type { SyncEntity, SyncPushResponse, WireSyncEntity } from './types';
 import type { AppDatabase, SyncDatabaseTables } from '@/src/dexie/db';
 import { SyncStatus } from '@/src/db/enums/sync-status';
-import { getDexieDb, NON_SYNC_TABLES } from '@/src/dexie/db';
+import { NON_SYNC_TABLES } from '@/src/dexie/db';
 import { API_PATHS } from '../api-paths';
 
 function getSyncTable(dexieDb: AppDatabase, tableName: SyncDatabaseTables): Table<SyncEntity, string> {

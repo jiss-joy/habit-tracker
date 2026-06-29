@@ -1,10 +1,14 @@
 import { SyncStatus } from '../db/enums/sync-status';
 import { useDexieDb } from '../hooks/use-dexie-db';
+import { useSession } from '../lib/auth/auth-client';
 import { useUuid } from './use-uuid';
 
-export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000000000') {
+export function useHabitActions() {
   const getUuid = useUuid();
   const db = useDexieDb();
+  const { data: session } = useSession();
+
+  const userId = session?.user.id;
 
   // TODO: Add TTL for deleted habits and logs to clean up the database after a certain period, e.g., 30 days. This will help in maintaining a lean database and improve performance over time.
   async function deleteHabit(habitId: string) {
@@ -23,6 +27,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
       for (const log of logs) {
         await db.habitLogs.update(log.id, {
           isDeleted: 1,
+          syncStatus: SyncStatus.DIRTY,
           updatedAt: new Date(),
         });
       }
@@ -31,6 +36,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
   }
 
   async function toggleBinaryLog(habitId: string, dateStr: string) {
+    if (!userId) return;
     const logSlug = `${userId}_${habitId}_${dateStr}`;
     const logUuid = getUuid(logSlug);
     const existingLog = await db.habitLogs.get(logUuid);
@@ -56,6 +62,8 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
   }
 
   async function saveMeasurableLog(habitId: string, dateStr: string, value: number) {
+    if (!userId) return;
+
     const logSlug = `${userId}_${habitId}_${dateStr}`;
     const logUuid = getUuid(logSlug);
 

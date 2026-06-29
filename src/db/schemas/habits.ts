@@ -1,13 +1,14 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import { bigint, boolean, index, integer, pgSequence, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import { bigint, index, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { HabitFrequencies, habitFrequencyEnum } from '../enums/habit-frequency';
 import { HabitType, habitTypeEnum } from '../enums/habit-type';
 import { DEFAULT_COLUMNS } from '../helpers/default-columns';
+import { users } from './auth';
 
 export const habits = pgTable('habits', {
   id: uuid().primaryKey(),
-  userId: varchar().notNull(),
+  userId: uuid().notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text().notNull(),
   description: text(),
   frequency: habitFrequencyEnum().notNull().default(HabitFrequencies.DAILY),

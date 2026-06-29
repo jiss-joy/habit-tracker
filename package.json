@@ -18,7 +18,8 @@
     "db:stop": "supabase stop",
     "db:kill": "supabase stop --no-backup",
     "db:status": "supabase status",
-    "db:reset": "run-s db:kill db:start"
+    "db:reset": "run-s db:kill db:start",
+    "db:seed": "bun ./src/db/seed/seed-runner.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -51,6 +52,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-seed": "^0.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "eslint-plugin-format": "^2.0.1",

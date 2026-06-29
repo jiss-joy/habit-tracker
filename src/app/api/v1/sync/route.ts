@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     });
     if (!session) return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
     // 🔒 Extract active user identity context (replace with your auth session)
-    const userId = 'current_authenticated_user_id';
+    const userId = session.user.id;
     const body = await request.json() as RequestParams;
     const { lastSyncId, localDirtyRecords } = body;
 

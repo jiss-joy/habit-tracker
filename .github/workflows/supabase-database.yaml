@@ -40,11 +40,11 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy migrations to cloud DB
+      - name: Reset database
+        run: supabase db reset --db-url "$SUPABASE_DATABASE_URL" --workdir=src
+
+      - name: Deploy migrations
         run: supabase db push --db-url "$SUPABASE_DATABASE_URL" --workdir=src
 
-      # - name: Deploy migrations to develop
-      # run: echo 'y' | supabase db reset --linked --workdir=apps/api/db
-
       - name: Reset seed data
-        run: npm run db:seed:develop
+        run: bun run db:seed

@@ -8,18 +8,17 @@ import { generatePastNDays } from '../utils/date-helpers';
 import { HabitRow } from './habit-row';
 
 export const HabitList = () => {
-  const MOCK_USER = '00000000-0000-0000-0000-000000000000';
   const db = useDexieDb();
 
   const habits = useLiveQuery(async () =>
     db.habits.toArray().then(rows => rows.filter(habit => habit.isDeleted !== 1)),
   );
   const logs = useLiveQuery(async () =>
-    db.habitLogs.where('userId').equals(MOCK_USER).toArray(),
+    db.habitLogs.toArray(),
   );
 
   const timeline = generatePastNDays(10);
-  const { deleteHabit, toggleBinaryLog, saveMeasurableLog } = useHabitActions(MOCK_USER);
+  const { deleteHabit, toggleBinaryLog, saveMeasurableLog } = useHabitActions();
 
   // ⏳ 2. Premium Skeleton Loading State (Prevents layout jumping)
   if (habits === undefined || logs === undefined) {

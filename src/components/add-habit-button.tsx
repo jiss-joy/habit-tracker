@@ -1,12 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '../components/shadcn/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/shadcn/dialog';
-
 import {
   Field,
   FieldError,
@@ -20,6 +21,8 @@ import { HabitType } from '../db/enums/habit-type';
 import { SyncStatus } from '../db/enums/sync-status';
 import { useDexieDb } from '../hooks/use-dexie-db';
 import { useUuid } from '../hooks/use-uuid';
+import { useSession } from '../lib/auth/auth-client';
+import { AUTH_REDIRECT_ROUTE } from '../lib/routes';
 
 // 💡 Define strict validation schema matching your layout requirements
 const habitFormSchema = z.discriminatedUnion('type', [
@@ -54,6 +57,7 @@ export function AddHabitDialog() {
   const [open, setOpen] = useState(false);
   const getUuid = useUuid();
   const db = useDexieDb();
+  const { data: session } = useSession();
 
   // 💡 Initialize react-hook-form with Zod validation resolver
   const {
@@ -75,6 +79,7 @@ export function AddHabitDialog() {
   const selectedType = watch('type');
 
   async function onSubmit(data: HabitFormValues) {
+    if (!session) return;
     const timestamp = Date.now();
     const habitName = data.name.trim();
     const habitSlug = `USER_ID_${habitName}_${timestamp}`;
@@ -82,7 +87,7 @@ export function AddHabitDialog() {
 
     await db.habits.add({
       id: habitUuid,
-      userId: '00000000-0000-0000-0000-000000000000',
+      userId: session?.user.id,
       name: habitName,
       description: data.description || null,
       type: data.type,

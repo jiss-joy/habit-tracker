@@ -4,8 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Button } from '../components/shadcn/button';
 
+import { getRandomDevUser } from '../app/(public)/login/login-actions';
+import { Button } from '../components/shadcn/button';
 import {
   Card,
   CardContent,
@@ -40,7 +41,7 @@ export function LoginForm({
   const {
     handleSubmit,
     control,
-    setValues,
+    setValue,
     setError,
     formState: { errors },
   } = useForm<LoginFormValues>({
@@ -51,10 +52,17 @@ export function LoginForm({
     },
   });
 
-  function fillCredentials() {
-    setValues({
-      email: 'test@test.com',
-      password: 'Test1234',
+  async function fillCredentials() {
+    const user = await getRandomDevUser();
+    setValue('email', user.email, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    // Set password and do the same
+    setValue('password', 'Test1234', {
+      shouldValidate: true,
+      shouldDirty: true,
     });
   }
 
@@ -102,7 +110,7 @@ export function LoginForm({
                   <Field data-invalid={fieldState.invalid}>
                     <div className="flex flex-row w-max justify-between">
                       <FieldLabel htmlFor="email">Email</FieldLabel>
-                      <Button variant="link" onClick={fillCredentials}>Fill credentials</Button>
+                      <Button variant="link" type="button" onClick={fillCredentials}>Fill credentials</Button>
                     </div>
                     <Input
                       {...field}
@@ -134,7 +142,7 @@ export function LoginForm({
                     <Input
                       {...field}
                       id="password"
-                      type="password"
+                      type="text"
                       disabled={isLoading}
                     />
                     {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
