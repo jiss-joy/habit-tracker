@@ -1,6 +1,8 @@
 import { db } from "@/src/db";
 import { SYNC_REGISTRY, SyncTableKey } from "@/src/db/sync-registry";
+import { auth } from "@/src/lib/auth/auth";
 import { and, eq, getTableColumns, gt, sql } from "drizzle-orm";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 // TODO: Rename?
@@ -20,6 +22,10 @@ type RequestParams = {
 
 export async function POST(request: Request) {
   try {
+    const session = auth.api.getSession({
+      headers: await headers(),
+    });
+    if (!session) return NextResponse.json({ error: "Authentication failed" }, { status: 401 })
     // 🔒 Extract active user identity context (replace with your auth session)
     const userId = "current_authenticated_user_id";
     const body = await request.json() as RequestParams;
