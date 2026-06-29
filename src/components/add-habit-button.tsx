@@ -1,25 +1,25 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { HabitFrequencies } from '../db/enums/habit-frequency';
-import { HabitType } from '../db/enums/habit-type';
+import { Button } from '../components/shadcn/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/shadcn/dialog';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/shadcn/dialog";
-import { Button } from "../components/shadcn/button";
-import { Input } from "../components/shadcn/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/shadcn/select";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "../components/shadcn/field"
-import { useUuid } from '../hooks/use-uuid';
-import { useDexieDb } from '../contexts/dexie-provider';
+} from '../components/shadcn/field';
+import { Input } from '../components/shadcn/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/shadcn/select';
+import { HabitFrequencies } from '../db/enums/habit-frequency';
+import { HabitType } from '../db/enums/habit-type';
 import { SyncStatus } from '../db/enums/sync-status';
+import { useDexieDb } from '../hooks/use-dexie-db';
+import { useUuid } from '../hooks/use-uuid';
 
 // 💡 Define strict validation schema matching your layout requirements
 const habitFormSchema = z.discriminatedUnion('type', [
@@ -43,8 +43,8 @@ const habitFormSchema = z.discriminatedUnion('type', [
     }
     return true;
   }, {
-    message: "Target goal and unit are required for measurable habits",
-    path: ["targetValue"] // Highlights the target field if validation fails
+    message: 'Target goal and unit are required for measurable habits',
+    path: ['targetValue'], // Highlights the target field if validation fails
   }),
 ]);
 
@@ -52,8 +52,8 @@ type HabitFormValues = z.infer<typeof habitFormSchema>;
 
 export function AddHabitDialog() {
   const [open, setOpen] = useState(false);
-  const getUuid = useUuid()
-  const db = useDexieDb(); 
+  const getUuid = useUuid();
+  const db = useDexieDb();
 
   // 💡 Initialize react-hook-form with Zod validation resolver
   const {
@@ -75,7 +75,7 @@ export function AddHabitDialog() {
   const selectedType = watch('type');
 
   async function onSubmit(data: HabitFormValues) {
-    const timestamp = new Date().getTime();
+    const timestamp = Date.now();
     const habitName = data.name.trim();
     const habitSlug = `USER_ID_${habitName}_${timestamp}`;
     const habitUuid = getUuid(habitSlug);
@@ -99,8 +99,13 @@ export function AddHabitDialog() {
     setOpen(false);
   }
 
+  function onOpenChange(open: boolean) {
+    setOpen(open);
+    if (!open) reset();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="default">+ Add Habit</Button>
       </DialogTrigger>
@@ -114,7 +119,7 @@ export function AddHabitDialog() {
             <Controller
               name="name"
               control={control}
-              render={({field, fieldState})=>(
+              render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Habit Name</FieldLabel>
                   <Input {...field} id="name" placeholder="Exercise, Meditate..." />
@@ -128,7 +133,7 @@ export function AddHabitDialog() {
             <Controller
               name="description"
               control={control}
-              render={({field, fieldState})=>(
+              render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Description</FieldLabel>
                   <Input {...field} id="description" placeholder="Optional details..." />
@@ -138,11 +143,11 @@ export function AddHabitDialog() {
             />
           </FieldGroup>
 
-          <FieldGroup className='flex flex-row'>
+          <FieldGroup className="flex flex-row">
             <Controller
               name="type"
               control={control}
-              render={({field, fieldState})=>(
+              render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Type</FieldLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
@@ -159,7 +164,7 @@ export function AddHabitDialog() {
             <Controller
               name="frequency"
               control={control}
-              render={({field, fieldState})=>(
+              render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Frequency</FieldLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
@@ -180,7 +185,7 @@ export function AddHabitDialog() {
               <Controller
                 name="targetValue"
                 control={control}
-                render={({field, fieldState})=>(
+                render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel>Target Goal</FieldLabel>
                     <Input {...field} id="targetValue" type="number" placeholder="20, 500..." />
@@ -191,7 +196,7 @@ export function AddHabitDialog() {
               <Controller
                 name="unit"
                 control={control}
-                render={({field, fieldState})=>(
+                render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel>Unit</FieldLabel>
                     <Input {...field} id="unit" placeholder="pages, ml..." />

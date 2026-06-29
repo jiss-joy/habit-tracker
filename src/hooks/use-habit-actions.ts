@@ -1,6 +1,6 @@
-import { useDexieDb } from "../contexts/dexie-provider";
-import { SyncStatus } from "../db/enums/sync-status";
-import { useUuid } from "./use-uuid";
+import { SyncStatus } from '../db/enums/sync-status';
+import { useDexieDb } from '../hooks/use-dexie-db';
+import { useUuid } from './use-uuid';
 
 export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000000000') {
   const getUuid = useUuid();
@@ -8,13 +8,12 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
 
   // TODO: Add TTL for deleted habits and logs to clean up the database after a certain period, e.g., 30 days. This will help in maintaining a lean database and improve performance over time.
   async function deleteHabit(habitId: string) {
-    if (!confirm("Are you sure you want to delete this habit and all its logged history?")) return false;
-
+    // TODO: Add a confirmation dialog here before delete.
     await db.transaction('rw', [db.habits, db.habitLogs], async () => {
       await db.habits.update(habitId, {
         isDeleted: 1,
         syncStatus: SyncStatus.MODIFIED,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       // 2. Cascade delete all associated logs for this habit locally
@@ -24,7 +23,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
       for (const log of logs) {
         await db.habitLogs.update(log.id, {
           isDeleted: 1,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
       }
     });
@@ -41,33 +40,34 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
         value: existingLog.value === 1 ? 0 : 1,
         updatedAt: new Date(),
       });
-    } else {
+    }
+    else {
       await db.habitLogs.add({
         id: logUuid,
         habitId,
-        userId: userId,
+        userId,
         logDate: dateStr,
         value: 1,
         syncStatus: SyncStatus.MODIFIED,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
     }
   }
 
-  async function saveMeasurableLog(habitId: string, dateStr: string, value: number, existingLogId?: string) {
+  async function saveMeasurableLog(habitId: string, dateStr: string, value: number) {
     const logSlug = `${userId}_${habitId}_${dateStr}`;
     const logUuid = getUuid(logSlug);
 
     await db.habitLogs.put({
       id: logUuid,
       habitId,
-      userId: userId,
+      userId,
       logDate: dateStr,
       value,
       syncStatus: SyncStatus.MODIFIED,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
   }
 

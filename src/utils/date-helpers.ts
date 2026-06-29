@@ -1,10 +1,10 @@
 export interface TimelineDay {
-  dateStr: string;   // "2026-06-25" (The unique transactional key)
-  label: string;     // "T", "F", "S" (Single-character day header)
+  dateStr: string; // "2026-06-25" (The unique transactional key)
+  label: string; // "T", "F", "S" (Single-character day header)
 }
 
 /**
- * Returns an array containing the last 10 days up to today, 
+ * Returns an array containing the last 10 days up to today,
 * ordered reverse-chronologically (Newest to Oldest / Today first).
 */
 export function generatePastNDays(n: number = 10): TimelineDay[] {

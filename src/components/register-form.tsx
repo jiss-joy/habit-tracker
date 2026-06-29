@@ -1,27 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { signUp } from '../lib/auth/auth-client'; // 👈 Adjust this path to your BetterAuth client setup
+import { Button } from '../components/shadcn/button';
 
-import { Button } from "../components/shadcn/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/shadcn/card";
+} from '../components/shadcn/card';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "../components/shadcn/field";
-import { Input } from "../components/shadcn/input";
+} from '../components/shadcn/field';
+import { Input } from '../components/shadcn/input';
+import { signUp } from '../lib/auth/auth-client'; // 👈 Adjust this path to your BetterAuth client setup
 
 // 📝 Define strict client-side validation schema
 const registerSchema = z.object({
@@ -29,9 +29,9 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address').trim().toLowerCase(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"], // Highlights the confirm password field on mismatch
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'], // Highlights the confirm password field on mismatch
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -60,7 +60,7 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
         email: values.email,
         password: values.password,
         name: values.name,
-        callbackURL: "/dashboard", // BetterAuth auto-redirects here on success
+        callbackURL: '/dashboard', // BetterAuth auto-redirects here on success
       },
       {
         onRequest: () => {
@@ -72,9 +72,9 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
         onError: (ctx) => {
           setIsLoading(false);
           // Set a root-level error to display within the form instead of a dirty window alert
-          setError("root", { message: ctx.error.message });
+          setError('root', { message: ctx.error.message });
         },
-      }
+      },
     );
   }
 
@@ -151,13 +151,15 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
                       {errors.root.message}
                     </p>
                   )}
-                  
+
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
-                  
+
                   <FieldDescription className="px-6 text-center mt-2">
-                    Already have an account? <a href="/login" className="underline underline-offset-4 hover:text-primary">Sign in</a>
+                    Already have an account?
+                    {' '}
+                    <a href="/login" className="underline underline-offset-4 hover:text-primary">Sign in</a>
                   </FieldDescription>
                 </Field>
               </FieldGroup>
@@ -165,10 +167,16 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
           </form>
         </CardContent>
       </Card>
-      
+
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#" className="underline underline-offset-4">Terms of Service</a>{" "}
-        and <a href="#" className="underline underline-offset-4">Privacy Policy</a>.
+        By clicking continue, you agree to our
+        {' '}
+        <a href="#" className="underline underline-offset-4">Terms of Service</a>
+        {' '}
+        and
+        {' '}
+        <a href="#" className="underline underline-offset-4">Privacy Policy</a>
+        .
       </FieldDescription>
     </div>
   );

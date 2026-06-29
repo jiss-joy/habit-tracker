@@ -6,7 +6,7 @@
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --quiet",
     "typecheck": "tsc --noEmit",
     "analyze": "run-s typecheck lint",
     "db:generate": "drizzle-kit generate",
@@ -54,6 +54,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "eslint-plugin-format": "^2.0.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "eslint-plugin-tailwindcss": "^4.0.4",
     "npm-run-all": "^4.1.5",
     "tailwindcss": "^4",
     "typescript": "^5"
