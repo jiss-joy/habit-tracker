@@ -41,7 +41,7 @@ jobs:
           version: latest
 
       - name: Link Supabase development project
-        run: supabase link --project-ref $SUPABASE_PROJECT_ID --workdir=apps/api/db
+        run: supabase link --project-ref $SUPABASE_PROJECT_ID
 
       - name: Deploy migrations to cloud DB
         run: supabase db push
