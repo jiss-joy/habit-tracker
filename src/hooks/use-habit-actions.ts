@@ -12,7 +12,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
     await db.transaction('rw', [db.habits, db.habitLogs], async () => {
       await db.habits.update(habitId, {
         isDeleted: 1,
-        syncStatus: SyncStatus.MODIFIED,
+        syncStatus: SyncStatus.DIRTY,
         updatedAt: new Date(),
       });
 
@@ -48,7 +48,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
         userId,
         logDate: dateStr,
         value: 1,
-        syncStatus: SyncStatus.MODIFIED,
+        syncStatus: SyncStatus.DIRTY,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -65,7 +65,7 @@ export function useHabitActions(userId: string = '00000000-0000-0000-0000-000000
       userId,
       logDate: dateStr,
       value,
-      syncStatus: SyncStatus.MODIFIED,
+      syncStatus: SyncStatus.DIRTY,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

@@ -11,7 +11,7 @@ export default antfu(
     jsdoc: false,
     toml: false,
     markdown: false,
-    ignores: ['src/components/shadcn/**'],
+    ignores: ['src/components/shadcn/**', 'src/supabase/**'],
 
     lessOpinionated: true,
     isInEditor: true,
