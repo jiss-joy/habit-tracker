@@ -28,6 +28,7 @@
   "workbench.productIconTheme": "fluent-icons",
   "editor.overtypeCursorStyle": "line",
   "cSpell.words": [
-    "Dexie"
+    "Dexie",
+    "SUPABASE"
   ]
 }
