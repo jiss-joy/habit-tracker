@@ -3,7 +3,7 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   dialect: 'postgresql',
   schema: ['./src/db/schemas/*', './src/db/enums/*', './src/db/sequences/*'],
-  out: './src/db/migrations',
+  out: './src/supabase/migrations',
   casing: 'snake_case',
   migrations: {
     prefix: 'timestamp',

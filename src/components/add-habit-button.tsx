@@ -90,7 +90,7 @@ export function AddHabitDialog() {
       targetValue: data.type === HabitType.MEASURABLE ? Number(data.targetValue) : null,
       unit: data.type === HabitType.MEASURABLE ? (data.unit ?? null) : null,
       isDeleted: 0,
-      syncStatus: SyncStatus.MODIFIED,
+      syncStatus: SyncStatus.DIRTY,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
