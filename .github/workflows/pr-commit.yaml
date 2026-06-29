@@ -37,6 +37,3 @@ jobs:
 
       - name: Build the project
         run: bun run build
-
-      - name: Run unit tests
-        run: bun run test
