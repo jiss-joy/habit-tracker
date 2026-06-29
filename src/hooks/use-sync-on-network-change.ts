@@ -13,7 +13,6 @@ export function useSyncOnNetworkChange() {
     }
 
     const handleRevalidation = () => {
-      console.log('⚡ [SYNC TRIGGER] Network change or window focus detected.');
       if (navigator.onLine) {
         triggerSync(db, true, 150);
       }

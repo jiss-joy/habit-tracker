@@ -5,12 +5,14 @@ import type { SyncMeta } from './sync-meta';
 import Dexie from 'dexie';
 import { triggerSync } from '../lib/sync-engine/sync-trigger';
 
-export type SyncDatabaseTables = Exclude<keyof AppDatabase, keyof import('dexie').Dexie | 'syncMeta'>;
+export const NON_SYNC_TABLES = new Set<string>(['syncMeta']);
+export type SyncDatabaseTables = Exclude<keyof AppDatabase, keyof import('dexie').Dexie | 'syncMeta' | 'isSyncing'>;
 
 export class AppDatabase extends Dexie {
   syncMeta!: Table<SyncMeta, string>;
   habits!: Table<Habit, string>;
   habitLogs!: Table<HabitLog, string>;
+  test!: Table;
 
   // 2. Lock flag to prevent feedback loops
   public isSyncing = false;

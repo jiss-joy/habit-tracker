@@ -2,8 +2,7 @@
 
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Card } from '../components/shadcn/card'; // ⚡ Importing shadcn Card
-import { useDexieDb } from '../contexts/dexie-context';
-import { getDexieDb } from '../dexie/db';
+import { useDexieDb } from '../hooks/use-dexie-db';
 import { useHabitActions } from '../hooks/use-habit-actions';
 import { generatePastNDays } from '../utils/date-helpers';
 import { HabitRow } from './habit-row';
@@ -87,7 +86,7 @@ export const HabitList = () => {
               onDeleteClick={deleteHabit}
               onBinaryToggle={toggleBinaryLog}
               onMeasurableSave={saveMeasurableLog}
-              onEditClick={(habit) => {}}
+              onEditClick={() => {}}
             />
           ))}
         </div>

@@ -76,7 +76,7 @@ export function HabitCell({
               className="h-8 text-xs px-2"
               onClick={async () => {
                 const parsed = Number(inputValue);
-                if (!isNaN(parsed) && parsed > 0) {
+                if (!Number.isNaN(parsed) && parsed > 0) {
                   await onMeasurableSave(habitId, dateStr, parsed, matchedLog?.id);
                   setOpen(false); // Cleanly shuts down upon completion
                 }

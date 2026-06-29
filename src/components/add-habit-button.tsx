@@ -15,10 +15,10 @@ import {
 } from '../components/shadcn/field';
 import { Input } from '../components/shadcn/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/shadcn/select';
-import { useDexieDb } from '../contexts/dexie-context';
 import { HabitFrequencies } from '../db/enums/habit-frequency';
 import { HabitType } from '../db/enums/habit-type';
 import { SyncStatus } from '../db/enums/sync-status';
+import { useDexieDb } from '../hooks/use-dexie-db';
 import { useUuid } from '../hooks/use-uuid';
 
 // 💡 Define strict validation schema matching your layout requirements
@@ -99,8 +99,13 @@ export function AddHabitDialog() {
     setOpen(false);
   }
 
+  function onOpenChange(open: boolean) {
+    setOpen(open);
+    if (!open) reset();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="default">+ Add Habit</Button>
       </DialogTrigger>

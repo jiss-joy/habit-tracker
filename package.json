@@ -6,7 +6,7 @@
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --quiet",
     "typecheck": "tsc --noEmit",
     "analyze": "run-s typecheck lint",
     "db:generate": "drizzle-kit generate",
