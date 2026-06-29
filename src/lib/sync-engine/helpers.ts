@@ -17,7 +17,7 @@ export function getSyncTableNames(db: AppDatabase): SyncDatabaseTables[] {
 
 export async function fetchDirtyRecords(dexieDb: AppDatabase, tableName: SyncDatabaseTables): Promise<SyncEntity[]> {
   const table = getSyncTable(dexieDb, tableName);
-  const dirtyRecords = await table.where('syncStatus').equals(SyncStatus.MODIFIED).toArray();
+  const dirtyRecords = await table.where('syncStatus').equals(SyncStatus.DIRTY).toArray();
   if (dirtyRecords.length === 0) return [];
 
   const ids = dirtyRecords.map(row => row.id);
@@ -54,7 +54,7 @@ function hydrateWireRecord(record: WireSyncEntity) {
 function checkIfLocalEditWins(incomingRecord: SyncEntity, localRecord?: SyncEntity): boolean {
   if (!localRecord) return false;
 
-  const hasPendingLocalEdit = localRecord.syncStatus === SyncStatus.MODIFIED || localRecord.syncStatus === SyncStatus.SYNCING;
+  const hasPendingLocalEdit = localRecord.syncStatus === SyncStatus.DIRTY || localRecord.syncStatus === SyncStatus.SYNCING;
   if (!hasPendingLocalEdit) return false;
 
   return localRecord.updatedAt.getTime() >= incomingRecord.updatedAt.getTime();
@@ -94,7 +94,7 @@ export async function mergeIncomingChanges(
 
 // ============================================================================
 // Step 4 — Finalize: confirm pushed rows as SYNCED (or remove if deleted),
-// but only the ones still SYNCING — a row bumped back to MODIFIED mid-flight
+// but only the ones still SYNCING — a row bumped back to DIRTY mid-flight
 // (because the user edited it again during the network round trip) is left
 // alone, so the next sync cycle picks up the newer edit.
 // ============================================================================
@@ -139,5 +139,5 @@ export async function revertDirtyRecords(
     .where('id')
     .anyOf(dirtyRecordIds)
     .and(row => row.syncStatus === SyncStatus.SYNCING)
-    .modify({ syncStatus: SyncStatus.MODIFIED });
+    .modify({ syncStatus: SyncStatus.DIRTY });
 }
